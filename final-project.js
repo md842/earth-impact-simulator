@@ -14,13 +14,17 @@ export class FinalProject extends Scene {
             s5: new defs.Subdivision_Sphere(5),
         };
 
-        this.launch = false;
+        this.launch = this.hit = this.reset = this.destroy = false;
+        this.projectile_speed = 0;
+        this.projectile_pos = 0;
 
         // Define the materials used to draw the Earth and its moon.
         const bump = new defs.Fake_Bump_Map(1);
         this.materials = {
             earth: new Material(bump, 
                 {specularity: 0.75, diffusivity: 1, ambient: 1, texture: new Texture("assets/earth.gif")}),
+            destroyed_earth: new Material(new defs.Phong_Shader(), 
+                {specularity: 0.75, diffusivity: 1, ambient: 0.25, color: hex_color("#FF0000")}),
             moon: new Material(new defs.Phong_Shader(), 
                 {specularity: 0.75, diffusivity: 1, ambient: 0.25, color: hex_color("#333333")}),
             projectile: new Material(new defs.Phong_Shader(), 
@@ -35,7 +39,14 @@ export class FinalProject extends Scene {
         this.key_triggered_button("Default View", ["Control", "0"], () => this.attached = () => null);
         this.new_line();
         this.key_triggered_button("Attach camera to projectile", ["Control", "p"], () => this.attached = () => this.projectile);
-        this.key_triggered_button("Move Projectile", ["Control", "l"], () => this.launch = !this.launch);
+        this.new_line();
+        this.live_string(box=>box.textContent = "Current Speed: " + this.projectile_speed + " km/s");
+        this.new_line();
+        this.key_triggered_button("Increase Speed", ["Control", "i"], () => this.projectile_speed += 1);
+        this.key_triggered_button("Decrease Speed", ["Control", "d"], () => this.projectile_speed - 1 >= 0 ? this.projectile_speed-= 1 : this.projectile_speed = 0);
+        this.new_line();
+        this.key_triggered_button("Launch Projectile", ["Control", "l"], () => this.launch = !this.launch);
+        this.key_triggered_button("Reset Projectile", ["Control", "r"], () => this.reset = true);
     }
 
     display(context, program_state) {
@@ -88,7 +99,10 @@ export class FinalProject extends Scene {
         // Draw Earth
         const rotation_multiplier = 0.25; // Control the rotation speed of Earth on its axis
         let earth_transform = model_transform.times(Mat4.rotation(t * rotation_multiplier, t, t / (rotation_multiplier ** 2), 1).times(Mat4.scale(3, 3, 3)));
-        this.shapes.s5.draw(context, program_state, earth_transform, this.materials.earth);
+        if(this.destroy)
+            this.shapes.s5.draw(context, program_state, earth_transform, this.materials.destroyed_earth);
+        else
+            this.shapes.s5.draw(context, program_state, earth_transform, this.materials.earth);
         this.earth = earth_transform;
 
         // Draw moon
@@ -98,11 +112,22 @@ export class FinalProject extends Scene {
 
         // Draw projectile
         let projectile_transform = model_transform.times(Mat4.rotation(4.7, 0, 4.7, 1)).times(Mat4.translation(9, 0, 0)).times(Mat4.scale(0.3, 0.3, 0.3));
-        let projectile_t = t % 1
-        if(this.launch)
-            projectile_transform = projectile_transform.times(Mat4.translation(-20*projectile_t, 0, 0));
+        if(this.projectile_pos <= -20){
+            this.hit = true;
+            if(this.projectile_speed > 10)
+                this.destroy = true;
+        }
             
+        if(this.reset){
+            this.launch = this.hit = this.reset = this.destroy = false;
+            this.projectile_pos = 0;
+        }
+            
+        if(this.launch)
+            this.projectile_pos = this.hit ? -20 : -this.projectile_speed / (5*t) + this.projectile_pos;
+        projectile_transform = projectile_transform.times(Mat4.translation(this.projectile_pos, 0, 0));       
         this.shapes.s5.draw(context, program_state, projectile_transform, this.materials.projectile);
+
         this.projectile = projectile_transform;
     }
 }
