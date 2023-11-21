@@ -17,6 +17,7 @@ export class FinalProject extends Scene {
         this.launch = this.hit = this.reset = this.destroy = false;
         this.projectile_speed = 0;
         this.projectile_pos = 0;
+        this.projectile_size = 0.1;
 
         // Define the materials used to draw the Earth and its moon.
         const bump = new defs.Fake_Bump_Map(1);
@@ -44,6 +45,11 @@ export class FinalProject extends Scene {
         this.new_line();
         this.key_triggered_button("Increase Speed", ["Control", "i"], () => this.projectile_speed += 1);
         this.key_triggered_button("Decrease Speed", ["Control", "d"], () => this.projectile_speed - 1 >= 0 ? this.projectile_speed-= 1 : this.projectile_speed = 0);
+        this.new_line();
+        this.live_string(box=>box.textContent = "Current Size: " + Math.round(this.projectile_size * 10000) + "km");
+        this.new_line();
+        this.key_triggered_button("Increase Size", ["Control", "w"], () => this.projectile_size + 0.1 <= 0.9 ? this.projectile_size += 0.1: this.projectile_size = 0.9);
+        this.key_triggered_button("Decrease Size", ["Control", "s"], () => this.projectile_size - 0.1 >= 0.1 ? this.projectile_size-= 0.1 : this.projectile_size = 0);
         this.new_line();
         this.key_triggered_button("Launch Projectile", ["Control", "l"], () => this.launch = !this.launch);
         this.key_triggered_button("Reset Projectile", ["Control", "r"], () => this.reset = true);
@@ -111,10 +117,10 @@ export class FinalProject extends Scene {
         this.moon = moon_transform;
 
         // Draw projectile
-        let projectile_transform = model_transform.times(Mat4.rotation(4.7, 0, 4.7, 1)).times(Mat4.translation(9, 0, 0)).times(Mat4.scale(0.3, 0.3, 0.3));
-        if(this.projectile_pos <= -20){
+        let projectile_transform = model_transform.times(Mat4.rotation(4.7, 0, 4.7, 1)).times(Mat4.translation(9, 0, 0)).times(Mat4.scale(this.projectile_size, this.projectile_size, this.projectile_size));
+        if(this.projectile_pos <= -6/this.projectile_size){
             this.hit = true;
-            if(this.projectile_speed > 10)
+            if(this.projectile_speed * this.projectile_size * 10 > 60)
                 this.destroy = true;
         }
             
@@ -124,7 +130,7 @@ export class FinalProject extends Scene {
         }
             
         if(this.launch)
-            this.projectile_pos = this.hit ? -20 : -this.projectile_speed / (5*t) + this.projectile_pos;
+            this.projectile_pos = this.hit ? -6/this.projectile_size : -this.projectile_speed / (5*t) + this.projectile_pos;
         projectile_transform = projectile_transform.times(Mat4.translation(this.projectile_pos, 0, 0));       
         this.shapes.s5.draw(context, program_state, projectile_transform, this.materials.projectile);
 
