@@ -21,6 +21,8 @@ export class FinalProject extends Scene {
                 {specularity: 0.75, diffusivity: 1, ambient: 1, texture: new Texture("assets/earth.gif")}),
             moon: new Material(new defs.Phong_Shader(), 
                 {specularity: 0.75, diffusivity: 1, ambient: 0.25, color: hex_color("#333333")}),
+            projectile: new Material(new defs.Phong_Shader(), 
+                {specularity: 0.75, diffusivity: 1, ambient: 0.25, color: hex_color("#FF0000")}),
         }
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 10, 20), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -31,6 +33,7 @@ export class FinalProject extends Scene {
         this.key_triggered_button("Default View", ["Control", "0"], () => this.attached = () => null);
         this.new_line();
         this.key_triggered_button("Attach camera to projectile", ["Control", "p"], () => this.attached = () => this.projectile);
+        this.key_triggered_button("Move Projectile", ["Control", "p"], () => null);
     }
 
     display(context, program_state) {
@@ -90,5 +93,10 @@ export class FinalProject extends Scene {
         let moon_transform = earth_transform.times(Mat4.rotation(t, 0, t, 1)).times(Mat4.translation(2, 0, 0).times(Mat4.rotation(t, 0, t, 1)).times(Mat4.scale(0.1, 0.1, 0.1)));
         this.shapes.s5.draw(context, program_state, moon_transform, this.materials.moon);
         this.moon = moon_transform;
+
+        // Draw projectile
+        let projectile_transform = model_transform.times(Mat4.rotation(4.7, 0, 4.7, 1)).times(Mat4.translation(9, 0, 0)).times(Mat4.scale(0.3, 0.3, 0.3)).times(Mat4.translation(-5*t, 0, 0));
+        this.shapes.s5.draw(context, program_state, projectile_transform, this.materials.projectile);
+        this.projectile = projectile_transform;
     }
 }
