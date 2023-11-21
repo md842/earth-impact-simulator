@@ -14,6 +14,8 @@ export class FinalProject extends Scene {
             s5: new defs.Subdivision_Sphere(5),
         };
 
+        this.launch = false;
+
         // Define the materials used to draw the Earth and its moon.
         const bump = new defs.Fake_Bump_Map(1);
         this.materials = {
@@ -33,7 +35,7 @@ export class FinalProject extends Scene {
         this.key_triggered_button("Default View", ["Control", "0"], () => this.attached = () => null);
         this.new_line();
         this.key_triggered_button("Attach camera to projectile", ["Control", "p"], () => this.attached = () => this.projectile);
-        this.key_triggered_button("Move Projectile", ["Control", "p"], () => null);
+        this.key_triggered_button("Move Projectile", ["Control", "l"], () => this.launch = !this.launch);
     }
 
     display(context, program_state) {
@@ -95,7 +97,11 @@ export class FinalProject extends Scene {
         this.moon = moon_transform;
 
         // Draw projectile
-        let projectile_transform = model_transform.times(Mat4.rotation(4.7, 0, 4.7, 1)).times(Mat4.translation(9, 0, 0)).times(Mat4.scale(0.3, 0.3, 0.3)).times(Mat4.translation(-5*t, 0, 0));
+        let projectile_transform = model_transform.times(Mat4.rotation(4.7, 0, 4.7, 1)).times(Mat4.translation(9, 0, 0)).times(Mat4.scale(0.3, 0.3, 0.3));
+        let projectile_t = t % 1
+        if(this.launch)
+            projectile_transform = projectile_transform.times(Mat4.translation(-20*projectile_t, 0, 0));
+            
         this.shapes.s5.draw(context, program_state, projectile_transform, this.materials.projectile);
         this.projectile = projectile_transform;
     }
