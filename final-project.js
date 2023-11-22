@@ -26,8 +26,8 @@ export class FinalProject extends Scene {
                 {specularity: 0.75, diffusivity: 1, ambient: 1, texture: new Texture("assets/earth.gif")}),
             destroyed_earth: new Material(new defs.Phong_Shader(), 
                 {specularity: 0.75, diffusivity: 1, ambient: 0.25, color: hex_color("#FF0000")}),
-            moon: new Material(new defs.Phong_Shader(), 
-                {specularity: 0.75, diffusivity: 1, ambient: 0.25, color: hex_color("#333333")}),
+            moon: new Material(bump,
+                {specularity: 0.75, diffusivity: 1, ambient: 1, texture: new Texture("assets/moon.jpg")}),
             projectile: new Material(new defs.Phong_Shader(), 
                 {specularity: 0.75, diffusivity: 1, ambient: 0.25, color: hex_color("#FF0000")}),
         }
@@ -64,34 +64,6 @@ export class FinalProject extends Scene {
             program_state.set_camera(this.initial_camera_location);
         }
 
-        // We need to guard each operation on desired by checking if it has become null in the middle
-        // because "View solar system" is clickable at any time during the process!
-        let desired = this.initial_camera_location;
-        if (this.attached == null)
-            program_state.set_camera(this.initial_camera_location.map((x,i) =>
-                Vector.from(program_state.camera_inverse[i]).mix(x, 0.1)));
-        else{
-            desired = this.attached();
-            if (desired == null)
-                program_state.set_camera(this.initial_camera_location.map((x,i) =>
-                    Vector.from(program_state.camera_inverse[i]).mix(x, 0.1)));
-            else{
-                desired = desired.times(Mat4.translation(0, 0, 5));
-                if (desired == null)
-                    program_state.set_camera(this.initial_camera_location.map((x,i) =>
-                        Vector.from(program_state.camera_inverse[i]).mix(x, 0.1)));
-                else{
-                    desired = Mat4.inverse(desired);
-                    if (desired == null)
-                        program_state.set_camera(this.initial_camera_location.map((x,i) =>
-                            Vector.from(program_state.camera_inverse[i]).mix(x, 0.1)));
-                    else
-                        program_state.set_camera(desired.map((x,i) =>
-                            Vector.from(program_state.camera_inverse[i]).mix(x, 0.1)));
-                }
-            }
-        }
-
         // Define the program's lights
         program_state.lights = [new Light(vec4(0, 0, 0, 1), color(1, 1, 1, 1), 1000)];
 
@@ -102,7 +74,7 @@ export class FinalProject extends Scene {
 
         let model_transform = Mat4.identity();
 
-        // Draw Earth
+        // EARTH
         const rotation_multiplier = 0.25; // Control the rotation speed of Earth on its axis
         let earth_transform = model_transform.times(Mat4.rotation(t * rotation_multiplier, t, t / (rotation_multiplier ** 2), 1).times(Mat4.scale(3, 3, 3)));
         if(this.destroy)
@@ -111,12 +83,12 @@ export class FinalProject extends Scene {
             this.shapes.s5.draw(context, program_state, earth_transform, this.materials.earth);
         this.earth = earth_transform;
 
-        // Draw moon
+        // MOON
         let moon_transform = earth_transform.times(Mat4.rotation(t, 0, t, 1)).times(Mat4.translation(2, 0, 0).times(Mat4.rotation(t, 0, t, 1)).times(Mat4.scale(0.1, 0.1, 0.1)));
         this.shapes.s5.draw(context, program_state, moon_transform, this.materials.moon);
         this.moon = moon_transform;
 
-        // Draw projectile
+        // PROJECTILE
         let projectile_transform = model_transform.times(Mat4.rotation(4.7, 0, 4.7, 1)).times(Mat4.translation(9, 0, 0)).times(Mat4.scale(this.projectile_size, this.projectile_size, this.projectile_size));
         if(this.projectile_pos <= -6/this.projectile_size){
             this.hit = true;
@@ -134,6 +106,20 @@ export class FinalProject extends Scene {
         projectile_transform = projectile_transform.times(Mat4.translation(this.projectile_pos, 0, 0));       
         this.shapes.s5.draw(context, program_state, projectile_transform, this.materials.projectile);
 
+        // camera movement
         this.projectile = projectile_transform;
+
+        let desired = this.initial_camera_location;
+        if (this.attached === undefined) {}
+        else {
+            if (this.attached() == null) {
+                program_state.set_camera(this.initial_camera_location.map((x,i) =>
+                    Vector.from(program_state.camera_inverse[i]).mix(x, 0.1)));
+            }
+            // in project 3, desired = Mat4.inverse(Mat4.translation(-1,2,-4).times(this.attached()))
+            if(!!this.attached()) { desired = Mat4.inverse(this.attached().times(Mat4.translation(0,0,5)));}
+            desired.map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
+            program_state.set_camera(desired);
+        }
     }
 }
