@@ -23,6 +23,12 @@ export class FinalProject extends Scene {
         this.projectile_pos = 10 * this.scale;
         this.projectile_size = 500000;
 
+        this.textures = [new Texture("assets/projectile/apple.jpg"), new Texture("assets/projectile/discoball.jpg"),
+            new Texture("assets/projectile/greenmarble.jpg"), new Texture("assets/projectile/lemon.jpg"),
+            new Texture("assets/projectile/pokeball.png"), new Texture("assets/projectile/masterball.png"),
+            new Texture("assets/projectile/yarn.jpg"), new Texture("assets/earth.gif"),
+            new Texture("assets/projectile/8ball.png")];
+
         // Define the materials used to draw the Earth and its moon.
         const bump = new defs.Fake_Bump_Map(1);
         this.materials = {
@@ -37,13 +43,14 @@ export class FinalProject extends Scene {
                 {specularity: 0.75, diffusivity: 1, ambient: 0.25, color: hex_color("#FF0000")}),
             moon: new Material(bump,
                 {specularity: 0.75, diffusivity: 1, ambient: 1, texture: new Texture("assets/moon.jpg")}),
-            projectile: new Material(new defs.Phong_Shader(),
-                {specularity: 0.75, diffusivity: 1, ambient: 1, color: hex_color("#FF0000")}),
+            projectile: new Material(bump, {ambient: 1, texture: this.textures[0]}),
             stars: new Material(new defs.Phong_Shader(),
                 {specularity: 0.75, diffusivity: 1, ambient: 0.25, color: hex_color("#FFFFFF")}),
         }
 
-        this.initial_camera_location = Mat4.look_at(vec3(0, 3 * this.scale, 15 * this.scale), vec3(0, 0, 0), vec3(0, 1, 0));
+        this.projectile_texture = 0;
+
+        this.initial_camera_location = Mat4.look_at(vec3(6, 2 * this.scale, 15 * this.scale), vec3(0, 0, 0), vec3(0, 1, 0));
 
         this.star_transforms = []
         this.star_colors = [hex_color("#ffa6a6"),hex_color("#ffcaa6"),hex_color("#ffeca6"),hex_color("#a6fff9"),hex_color("#a6d4ff"),hex_color("#a6b0ff")]
@@ -51,33 +58,40 @@ export class FinalProject extends Scene {
 
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-        this.key_triggered_button("Static Camera View", ["Control", "s"], () => this.attached = () => null);
-        this.key_triggered_button("Dynamic Camera View", ["Control", "d"], () => this.attached = () => this.projectile);
+        this.new_line();
+        this.key_triggered_button("Free Camera", ["Control", "s"], () => this.attached = () => null);
+        this.key_triggered_button("Projectile Camera", ["Control", "d"], () => this.attached = () => this.projectile);
         this.new_line();
         this.new_line();
 
         this.make_slider("Projectile Velocity (m/s):", () => this.projectile_speed = this.slider_value, 10000, 299792457, 100000);
-        this.live_string(box=>box.textContent = "Velocity in terms of c: " + (this.projectile_speed / 299792458).toFixed(12) + "c");
+        this.live_string(box => box.textContent = "Velocity in terms of c: " + (this.projectile_speed / 299792458).toFixed(12) + "c");
         this.new_line();
         // Lorentz factor = 1 / sqrt(1 - v^2/c^2) where c is speed of light in vacuum
-        this.live_string(box=>box.textContent = "Lorentz factor: Î³ = " + (1 / Math.sqrt(1 - (this.projectile_speed ** 2)/(299792458 ** 2))).toFixed(12));
+        this.live_string(box => box.textContent = "Lorentz factor: Î³ = " + (1 / Math.sqrt(1 - (this.projectile_speed ** 2) / (299792458 ** 2))).toFixed(12));
 
         this.new_line();
         this.new_line();
 
-        this.make_slider("Projectile Radius (m):", () => this.projectile_size = this.slider_value, 1, 6378100, 250000);
-        this.live_string(box=>box.textContent = "% of Earth's radius: " + (this.projectile_size / 63781).toFixed(4) + "%");
+        this.make_slider("Projectile Radius (m):", () => this.projectile_size = this.slider_value, 1, 6378100, 500000);
+        this.live_string(box => box.textContent = "% of Earth's radius: " + (this.projectile_size / 63781).toFixed(4) + "%");
 
         this.new_line();
         this.new_line();
+        this.key_triggered_button("Randomize Projectile", ["Control", "e"], () => this.projectile_texture = Math.floor(Math.random()*this.textures.length));
+        this.live_string(box => box.textContent = this.projectile_texture);
+        this.new_line();
+        this.new_line();
+
         this.key_triggered_button("Launch Projectile", ["Control", "l"], () => this.launch = !this.launch);
         this.key_triggered_button("Reset Simulation", ["Control", "r"], () => this.reset = true);
         this.new_line();
         this.new_line();
         // Kinetic Energy = 0.5*m*v^2
         // Relativistic kinetic energy: (Lorentz factor - 1)(m_0)(c^2) where m_0 is mass at rest and c is speed of light
-        this.live_string(box=>box.textContent = "Classical kinetic energy of projectile: " + 0.5 * this.projectile_size * this.projectile_speed ** 2 + " Joules");
-        this.live_string(box=>box.textContent = "Relativistic kinetic energy of projectile: " + ((1 / Math.sqrt(1 - (this.projectile_speed ** 2)/(299792458 ** 2))) - 1) * this.projectile_size * 299792458 ** 2 + " Joules");
+        this.live_string(box => box.textContent = "Projectile Energy");
+        this.live_string(box => box.textContent = "- Classical Kinetic Energy: " + 0.5 * this.projectile_size * this.projectile_speed ** 2 + " Joules");
+        this.live_string(box => box.textContent = "- Relativistic Kinetic Energy: " + ((1 / Math.sqrt(1 - (this.projectile_speed ** 2) / (299792458 ** 2))) - 1) * this.projectile_size * 299792458 ** 2 + " Joules");
     }
 
     display(context, program_state) {
@@ -90,10 +104,10 @@ export class FinalProject extends Scene {
         }
 
         // Define the program's lights
-        program_state.lights = [new Light(vec4(0, 0, 0, 1), color(1, 1, 1, 1), 10000)];
+        program_state.lights = [new Light(vec4(0, 0, 0, 1), color(1, 1, 1, 1), 1000)];
 
         program_state.projection_transform = Mat4.perspective(
-            Math.PI / 4, context.width / context.height, .1, 1000);
+            Math.PI / 4, context.width / context.height, .1, 10000);
 
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
 
@@ -131,6 +145,8 @@ export class FinalProject extends Scene {
             }
         }
 
+        // TODO: projectile (olive, meatball, volleyball, popcorn, tennis ball, watermelon, character faces, beach ball, saturn, marble, bubble)
+
         if(this.reset){
             this.launch = this.hit = this.reset = this.destroy = this.cratered = false;
             this.projectile_pos = 10 * this.scale;
@@ -139,7 +155,7 @@ export class FinalProject extends Scene {
         if (!this.hit)
             if(this.launch)
                 this.projectile_pos -= this.scale * this.projectile_speed / 6378100.0; // Move projectile towards Earth based on scale factor
-        this.shapes.s5.draw(context, program_state, projectile_transform, this.materials.projectile); // Draw projectile based on position; will not be drawn after impact
+        this.shapes.s5.draw(context, program_state, projectile_transform, this.materials.projectile.override({ambient: 1, texture:this.textures[this.projectile_texture]})); // Draw projectile based on position; will not be drawn after impact
 
         // STARS
         function rand_int(min, max) {return Math.round(100 * (min + Math.random() * max)) / 100;}
