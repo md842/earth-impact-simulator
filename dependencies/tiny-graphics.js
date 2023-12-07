@@ -1378,6 +1378,7 @@ const Scene = tiny.Scene =
                 event.stopPropagation();   // Don't bubble the event to parent nodes; let child elements be targetted in isolation.
             }
             this.key_controls = new Keyboard_Manager(document, callback_behavior);
+            this.slider_value = 0;
         }
 
         new_line(parent = this.control_panel) {
@@ -1425,6 +1426,49 @@ const Scene = tiny.Scene =
             button.addEventListener("touchend", release, {passive: true});
             if (!shortcut_combination) return;
             this.key_controls.add(shortcut_combination, press, release);
+        }
+
+        make_slider(label_text, callback, min_val, max_val, default_val, recipient = this, parent = this.control_panel) {
+            // key_triggered_button():  Trigger any scene behavior by assigning
+            // a key shortcut and a labelled HTML button to fire any callback
+            // function/method of a Scene.  Optional release callback as well.
+            const container = parent.appendChild(document.createElement("div")); // Create a flex box to display label and slider on the same line
+            container.style.display = "flex";
+            container.style.justifyContent = "space-between";
+            const label = container.appendChild(document.createElement("p")); // Label for the slider
+            label.textContent = label_text;
+            label.style.margin = "auto 0px auto 0px";
+            const sub_container = container.appendChild(document.createElement("div")); // Group the slider and text box on the right
+            sub_container.style.display = "flex";
+            sub_container.style.padding = "2px 0px";
+            const slider = sub_container.appendChild(document.createElement("input")); // Slider
+            slider.style.margin = "auto 5px auto 0px";
+            slider.type = "range";
+            slider.min = min_val;
+            slider.max = max_val;
+            slider.value = default_val;
+            const text_box = sub_container.appendChild(document.createElement("input")); // Text box
+            text_box.style.margin = "auto 0px";
+            text_box.type = "number";
+            text_box.min = min_val;
+            text_box.max = max_val;
+            text_box.value = default_val;
+
+            const release = () => {
+                this.slider_value = slider.value; // Update program state to match slider
+                text_box.value = slider.value; // Update text box to match slider
+                callback.call(recipient);
+            };
+
+            const text_change = () => {
+                this.slider_value = text_box.value; // Update program state to match text box
+                slider.value = text_box.value; // Update slider to match text box
+                callback.call(recipient);
+            };
+
+            slider.addEventListener("mouseup", release);
+            text_box.addEventListener("input", text_change);
+            return;
         }
 
         // To use class Scene, override at least one of the below functions,
