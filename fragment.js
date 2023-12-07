@@ -26,7 +26,7 @@ export default class Fragment{
         this.fragment_displacement = 1;
     }
 
-    render(context, program_state, model_transform=Mat4.identity(), size = 1, spawn_num = 0, speed = 1, reset = false, t) {
+    render(context, program_state, model_transform=Mat4.identity(), size = 1, spawn_num = 0, speed = 1, reset = false, radius = 6.7, forward = false, t) {
         if(reset){
             this.randomize = true;
             this.fragment_displacement = 1;
@@ -43,11 +43,14 @@ export default class Fragment{
                 center_transform = center_transform.times(Mat4.rotation(Math.random(), Math.random(), Math.random(), Math.random()));
             let theta = 2 * Math.PI * (i+1) * (1 - Math.sqrt(5));;
             let phi = Math.acos(1 - 2 * (i+1) / spawn_num);
-            let radius = 6.7;
             let x = radius * Math.sin(phi) * Math.cos(theta);
             let y = radius * Math.sin(phi) * Math.sin(theta);
             let z = radius * Math.cos(phi);
-            let rock_transform = center_transform.times(Mat4.translation(x*this.fragment_displacement, y*this.fragment_displacement, z*this.fragment_displacement));
+            let rock_transform = center_transform;
+            if(!forward)
+                rock_transform = rock_transform.times(Mat4.translation(x*this.fragment_displacement, y*this.fragment_displacement, z*this.fragment_displacement));
+            else
+                rock_transform = rock_transform.times(Mat4.translation(x*this.fragment_displacement, y*this.fragment_displacement, Math.abs(z*this.fragment_displacement)));
             if (i%2 == 0)
                 rock_transform = rock_transform.times(Mat4.rotation(t, 0, 0, t));
             else

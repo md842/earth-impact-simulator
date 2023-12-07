@@ -17,7 +17,8 @@ export class FinalProject extends Scene {
             s5: new defs.Subdivision_Sphere(5),
         };
 
-        this.fragment = new Fragment();
+        this.earth_fragment = new Fragment();
+        this.projectile_fragment = new Fragment();
 
         this.scale = 3.0; // For Michelle
 
@@ -120,7 +121,7 @@ export class FinalProject extends Scene {
         const rotation_multiplier = 0.25; // Control the rotation speed of Earth on its axis
         let earth_transform = model_transform.times(Mat4.rotation(t * rotation_multiplier, t, t / (rotation_multiplier ** 2), 1).times(Mat4.scale(this.scale, this.scale, this.scale)));
         if(this.destroy)
-            this.fragment.render(context, program_state, model_transform, 1.4, 200, 0.01, this.reset, t); // Earth was destroyed by impact, draw with a different material
+            this.earth_fragment.render(context, program_state, model_transform, 1.4, 1000, 0.01, this.reset, 6.7, false,t); // Earth was destroyed by impact, draw with a different material
         else if (this.cratered) // Earth was cratered by impact, draw with a different material
             this.shapes.s5.draw(context, program_state, earth_transform, this.materials.cratered_earth);
         else // Earth has not been impacted, draw with base material
@@ -158,7 +159,10 @@ export class FinalProject extends Scene {
         if (!this.hit)
             if(this.launch)
                 this.projectile_pos -= this.scale * this.projectile_speed / 6378100.0; // Move projectile towards Earth based on scale factor
-        this.shapes.s5.draw(context, program_state, projectile_transform, this.materials.projectile.override({ambient: 1, texture:this.textures[this.projectile_texture]})); // Draw projectile based on position; will not be drawn after impact
+        if(this.hit)
+            this.projectile_fragment.render(context, program_state, projectile_transform, 0.2, 1000, 1, this.reset, 3, true,t);
+        else
+            this.shapes.s5.draw(context, program_state, projectile_transform, this.materials.projectile.override({ambient: 1, texture:this.textures[this.projectile_texture]})); // Draw projectile based on position; will not be drawn after impact
 
         // STARS
         function rand_int(min, max) {return Math.round(100 * (min + Math.random() * max)) / 100;}
