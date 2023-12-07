@@ -120,7 +120,7 @@ export class FinalProject extends Scene {
         const rotation_multiplier = 0.25; // Control the rotation speed of Earth on its axis
         let earth_transform = model_transform.times(Mat4.rotation(t * rotation_multiplier, t, t / (rotation_multiplier ** 2), 1).times(Mat4.scale(this.scale, this.scale, this.scale)));
         if(this.destroy)
-            this.fragment.render(context, program_state, model_transform, 0.4, 100, 2, t); // Earth was destroyed by impact, draw with a different material
+            this.fragment.render(context, program_state, model_transform, 1.4, 200, 0.01, this.reset, t); // Earth was destroyed by impact, draw with a different material
         else if (this.cratered) // Earth was cratered by impact, draw with a different material
             this.shapes.s5.draw(context, program_state, earth_transform, this.materials.cratered_earth);
         else // Earth has not been impacted, draw with base material
