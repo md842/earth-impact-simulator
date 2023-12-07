@@ -150,19 +150,19 @@ export class FinalProject extends Scene {
         }
 
         // TODO: projectile (olive, meatball, volleyball, popcorn, tennis ball, watermelon, character faces, beach ball, saturn, marble, bubble)
-
+        if (!this.hit)
+            if(this.launch)
+                this.projectile_pos -= this.scale * this.projectile_speed / 6378100.0; // Move projectile towards Earth based on scale factor
+        if(this.hit)
+            this.projectile_fragment.render(context, program_state, projectile_transform, 0.2, 1000, 1, this.reset, 4, true,t);
+        else
+            this.shapes.s5.draw(context, program_state, projectile_transform, this.materials.projectile.override({ambient: 1, texture:this.textures[this.projectile_texture]})); // Draw projectile based on position; will not be drawn after impact
         if(this.reset){
             this.launch = this.hit = this.reset = this.destroy = this.cratered = false;
             this.projectile_pos = 10 * this.scale;
         }
 
-        if (!this.hit)
-            if(this.launch)
-                this.projectile_pos -= this.scale * this.projectile_speed / 6378100.0; // Move projectile towards Earth based on scale factor
-        if(this.hit)
-            this.projectile_fragment.render(context, program_state, projectile_transform, 0.2, 1000, 1, this.reset, 3, true,t);
-        else
-            this.shapes.s5.draw(context, program_state, projectile_transform, this.materials.projectile.override({ambient: 1, texture:this.textures[this.projectile_texture]})); // Draw projectile based on position; will not be drawn after impact
+
 
         // STARS
         function rand_int(min, max) {return Math.round(100 * (min + Math.random() * max)) / 100;}
