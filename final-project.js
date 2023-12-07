@@ -1,4 +1,5 @@
 import {defs, tiny} from './dependencies/common.js';
+import Fragment from './fragment.js';
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Material, Texture, Shape, Scene,
@@ -15,6 +16,8 @@ export class FinalProject extends Scene {
         this.shapes = {
             s5: new defs.Subdivision_Sphere(5),
         };
+
+        this.fragment = new Fragment();
 
         this.scale = 3.0; // For Michelle
 
@@ -52,8 +55,8 @@ export class FinalProject extends Scene {
 
         this.initial_camera_location = Mat4.look_at(vec3(6, 2 * this.scale, 15 * this.scale), vec3(0, 0, 0), vec3(0, 1, 0));
 
-        this.star_transforms = []
-        this.star_colors = [hex_color("#ffa6a6"),hex_color("#ffcaa6"),hex_color("#ffeca6"),hex_color("#a6fff9"),hex_color("#a6d4ff"),hex_color("#a6b0ff")]
+        this.star_transforms = [];
+        this.star_colors = [hex_color("#ffa6a6"),hex_color("#ffcaa6"),hex_color("#ffeca6"),hex_color("#a6fff9"),hex_color("#a6d4ff"),hex_color("#a6b0ff")];
     }
 
     make_control_panel() {
@@ -116,8 +119,8 @@ export class FinalProject extends Scene {
         // EARTH
         const rotation_multiplier = 0.25; // Control the rotation speed of Earth on its axis
         let earth_transform = model_transform.times(Mat4.rotation(t * rotation_multiplier, t, t / (rotation_multiplier ** 2), 1).times(Mat4.scale(this.scale, this.scale, this.scale)));
-        if(this.destroy) // Earth was destroyed by impact, draw with a different material
-            this.shapes.s5.draw(context, program_state, earth_transform, this.materials.destroyed_earth);
+        if(this.destroy)
+            this.fragment.render(context, program_state, model_transform, 0.4, 100, 2, t); // Earth was destroyed by impact, draw with a different material
         else if (this.cratered) // Earth was cratered by impact, draw with a different material
             this.shapes.s5.draw(context, program_state, earth_transform, this.materials.cratered_earth);
         else // Earth has not been impacted, draw with base material
@@ -205,6 +208,7 @@ export class FinalProject extends Scene {
             desired.map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
             program_state.set_camera(desired);
         }
+
     }
 }
 

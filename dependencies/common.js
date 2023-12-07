@@ -449,6 +449,124 @@ const Minimal_Shape = defs.Minimal_Shape =
         }
     }
 
+// from webgl-obj-loader.js
+function* triangulate(elements) {
+    if (elements.length <= 3) {
+        yield elements;
+    }
+    else if (elements.length === 4) {
+        yield [elements[0], elements[1], elements[2]];
+        yield [elements[2], elements[3], elements[0]];
+    }
+    else {
+        for (let i = 1; i < elements.length - 1; i++) {
+            yield [elements[0], elements[i], elements[i + 1]];
+        }
+    }
+}
+const Obj_Shape = defs.Obj_Shape =
+    class Obj_Shape extends Shape {                                 
+        constructor(file) {
+            super("position", "normal", "texture_coord");
+            this.read_file(file);
+            this.parsed = false;
+        }
+        Mesh(objectData) {                           
+            const verts = [];
+            const vertNormals = [];
+            const textures = [];
+
+            const unpacked = {
+                verts: [],
+                norms: [],
+                textures: [],
+                hashindices: {},
+                indices: [],
+                materialIndices: [],
+                index: 0,
+            };
+            const VERTEX_RE = /^v\s/;
+            const NORMAL_RE = /^vn\s/;
+            const TEXTURE_RE = /^vt\s/;
+            const FACE_RE = /^f\s/;
+            const WHITESPACE_RE = /\s+/;
+            const lines = objectData.split('\n');
+            for (let line of lines) {
+                line = line.trim();
+                if (!line || line.startsWith("#")) {
+                    continue;
+                }
+                const elements = line.split(WHITESPACE_RE);
+                elements.shift();
+
+                if (VERTEX_RE.test(line)){
+                    verts.push(...elements);
+                } 
+                else if (NORMAL_RE.test(line)){
+                    vertNormals.push(...elements);
+                } 
+                else if (TEXTURE_RE.test(line)){
+                    let coords = elements;
+                    coords = coords.slice(0, 2);
+                    textures.push(...coords);
+                } 
+                else if (FACE_RE.test(line)){
+                    const triangles = triangulate(elements);
+                    for (const triangle of triangles) {
+                        for (let j = 0, eleLen = triangle.length; j < eleLen; j++) {
+                        const hash = triangle[j];
+                        if (hash in unpacked.hashindices) {
+                            unpacked.indices.push(unpacked.hashindices[hash]);
+                        }
+                        else {
+                            const vertex = triangle[j].split("/");
+                            const normalIndex = vertex.length - 1;
+                            
+                            unpacked.verts.push(+verts[(+vertex[0] - 1) * 3 + 0]);
+                            unpacked.verts.push(+verts[(+vertex[0] - 1) * 3 + 1]);
+                            unpacked.verts.push(+verts[(+vertex[0] - 1) * 3 + 2]);
+
+                            if (textures.length) {
+                                unpacked.textures.push(+textures[(+vertex[1] - 1) * 2 + 0]);
+                                unpacked.textures.push(+textures[(+vertex[1] - 1) * 2 + 1]);
+                            }
+
+                            unpacked.norms.push(+vertNormals[(+vertex[normalIndex] - 1) * 3 + 0]);
+                            unpacked.norms.push(+vertNormals[(+vertex[normalIndex] - 1) * 3 + 1]);
+                            unpacked.norms.push(+vertNormals[(+vertex[normalIndex] - 1) * 3 + 2]);
+
+                            unpacked.hashindices[elements[j]] = unpacked.index;
+                            unpacked.indices.push(unpacked.index);
+                            unpacked.index += 1;
+                            }
+                        }
+                    }
+                }
+            }
+            for (var j = 0; j < unpacked.verts.length; j+=3) {
+                this.arrays.position.push(vec3(unpacked.verts[j], unpacked.verts[j + 1], unpacked.verts[j + 2]));
+            }
+            for (var j = 0; j < unpacked.norms.length; j+=3) {
+                this.arrays.normal.push(vec3(unpacked.norms[j], unpacked.norms[j + 1], unpacked.norms[j + 2]));
+            }
+            for (var j = 0; j < unpacked.textures.length; j+=2) {
+                this.arrays.texture_coord.push(vec(unpacked.textures[j], unpacked.textures[j + 1]));
+            }
+            this.indices = unpacked.indices;
+            this.parsed = true;
+        }
+
+        read_file(file) {                            
+            return fetch(file)
+                .then(response => {return Promise.resolve(response.text())})
+                .then(obj => this.Mesh(obj))
+        }
+        
+        draw(context, program_state, model_transform, material) {
+            if (this.parsed)
+                super.draw(context, program_state, model_transform, material);
+        }
+    }
 
 const Minimal_Webgl_Demo = defs.Minimal_Webgl_Demo =
     class Minimal_Webgl_Demo extends Scene {
