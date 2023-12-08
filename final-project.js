@@ -27,11 +27,12 @@ export class FinalProject extends Scene {
         this.projectile_pos = 10 * this.scale;
         this.projectile_size = 500000;
 
-        this.textures = [new Texture("assets/projectile/apple.jpg"), new Texture("assets/projectile/discoball.jpg"),
-            new Texture("assets/projectile/greenmarble.jpg"), new Texture("assets/projectile/lemon.jpg"),
+        this.textures = [new Texture("assets/projectile/meteor.jpg"), new Texture("assets/projectile/apple.jpg"),
+            new Texture("assets/projectile/lemon.jpg"), new Texture("assets/projectile/discoball.jpg"),
             new Texture("assets/projectile/pokeball.png"), new Texture("assets/projectile/masterball.png"),
             new Texture("assets/projectile/yarn.jpg"), new Texture("assets/earth.gif"),
-            new Texture("assets/projectile/8ball.png")];
+            new Texture("assets/projectile/8ball.png"), new Texture("assets/projectile/kirby.jpg"),
+            new Texture("assets/projectile/childe.png")];
 
         // Define the materials used to draw the Earth and its moon.
         const bump = new defs.Fake_Bump_Map(1);
@@ -68,22 +69,23 @@ export class FinalProject extends Scene {
         this.new_line();
         this.new_line();
 
-        this.make_slider("Projectile Velocity (m/s):", () => this.projectile_speed = this.slider_value, 10000, 299792457, 100000);
-        this.live_string(box => box.textContent = "Velocity in terms of c: " + (this.projectile_speed / 299792458).toFixed(12) + "c");
-        this.new_line();
+        // this.make_slider("Projectile Velocity (m/s):", () => this.projectile_speed = this.slider_value, 10000, 299792457, 10000);
+        this.live_string(box => box.textContent = "Projectile Velocity (m/s): " + (this.slider_value == 0 ? 10000 : this.slider_value));
+        this.make_long_slider(() => this.projectile_speed = this.slider_value, 10000, 299792457, 10000);
         // Lorentz factor = 1 / sqrt(1 - v^2/c^2) where c is speed of light in vacuum
-        this.live_string(box => box.textContent = "Lorentz factor: Î³ = " + (1 / Math.sqrt(1 - (this.projectile_speed ** 2) / (299792458 ** 2))).toFixed(12));
+        this.live_string(box => box.textContent = "• Lorentz factor: Î³ = " + (1 / Math.sqrt(1 - (this.projectile_speed ** 2) / (299792458 ** 2))).toFixed(12));
 
         this.new_line();
         this.new_line();
 
-        this.make_slider("Projectile Radius (m):", () => this.projectile_size = this.slider_value, 1, 6378100, 500000);
-        this.live_string(box => box.textContent = "% of Earth's radius: " + (this.projectile_size / 63781).toFixed(4) + "%");
+        // this.make_slider("Projectile Radius (m):", () => this.projectile_size = this.slider_value, 1, 6378100, 500000);
+        this.live_string(box => box.textContent = "Projectile Radius (m): " + (this.slider_value == 0 ? 500000 : this.slider_value));
+        this.make_long_slider(() => this.projectile_size = this.slider_value, 1, 6378100, 500000);
+        this.live_string(box => box.textContent = "• % of Earth's radius: " + (this.projectile_size / 63781).toFixed(4) + "%");
 
         this.new_line();
         this.new_line();
         this.key_triggered_button("Randomize Projectile", ["Control", "e"], () => this.projectile_texture = Math.floor(Math.random()*this.textures.length));
-        this.live_string(box => box.textContent = this.projectile_texture);
         this.new_line();
         this.new_line();
 
