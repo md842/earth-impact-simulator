@@ -26,6 +26,7 @@ export class FinalProject extends Scene {
         this.projectile_speed = 100000;
         this.projectile_pos = 10 * this.scale;
         this.projectile_size = 500000;
+        this.crater_size = 0;
 
         this.textures = [new Texture("assets/projectile/apple.jpg"), new Texture("assets/projectile/discoball.jpg"),
             new Texture("assets/projectile/greenmarble.jpg"), new Texture("assets/projectile/lemon.jpg"),
@@ -124,12 +125,28 @@ export class FinalProject extends Scene {
             this.earth_fragment.render(context, program_state, model_transform, 1.4, 1000, 0.01, this.reset, 6.7, false,t); // Earth was destroyed by impact, draw with a different material
         else if (this.cratered) // Earth was cratered by impact, draw with a different material
         {
-            this.materials.cratered_earth.shader.crater_size=0.1;
-            this.materials.cratered_earth.shader.x=1;
-            this.materials.cratered_earth.shader.y=0;
-            this.materials.cratered_earth.shader.z=0;
-            this.materials.cratered_earth.shader.w=1.0;
-            this.shapes.s5.draw(context, program_state, earth_transform, this.materials.cratered_earth);
+            let new_cratered_earth = new Material(new Craterable_Texture(), {
+                color: hex_color("#000000"),
+                ambient: 1, diffusivity: 0.1, specularity: 0.1,
+                texture: new Texture("assets/earth.gif", "LINEAR_MIPMAP_LINEAR")
+            });
+            if(this.crater_size < 0.1){
+                this.crater_size += 0.01;
+                new_cratered_earth.shader.crater_size=this.crater_size;
+                new_cratered_earth.shader.x=1;
+                new_cratered_earth.shader.y=0;
+                new_cratered_earth.shader.z=0;
+                new_cratered_earth.shader.w=1.0;
+                this.shapes.s5.draw(context, program_state, earth_transform, new_cratered_earth);
+            }
+            else {
+                this.materials.cratered_earth.shader.crater_size = 0.1;
+                this.materials.cratered_earth.shader.x=1;
+                this.materials.cratered_earth.shader.y=0;
+                this.materials.cratered_earth.shader.z=0;
+                this.materials.cratered_earth.shader.w=1.0;
+                this.shapes.s5.draw(context, program_state, earth_transform, this.materials.cratered_earth);
+            }
         }
             
         else // Earth has not been impacted, draw with base material
@@ -168,6 +185,7 @@ export class FinalProject extends Scene {
         if(this.reset){
             this.launch = this.hit = this.reset = this.destroy = this.cratered = false;
             this.projectile_pos = 10 * this.scale;
+            this.crater_size = 0;
         }
 
 
@@ -229,8 +247,7 @@ class Craterable_Texture extends Textured_Phong {
     constructor(){
         super();
         // crater_size of 2.0 covers the whole planet
-        this.crater_size = 0.2;
-        
+        this.crater_size = 0.3;
         this.x = 0;
         this.y = 0;
         this.z = 0;
@@ -244,7 +261,6 @@ class Craterable_Texture extends Textured_Phong {
             
             void main(){
                 vec4 tex_color = texture2D( texture, f_tex_coord);
-
                 // Draw a red crater
                 if (distance(vec2(0.5, 0.5), vec2(2.0 * f_tex_coord.x, f_tex_coord.y)) < ${this.crater_size})
                     tex_color = vec4(${this.x}, ${this.y}, ${this.z}, ${this.w});
