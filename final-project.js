@@ -123,7 +123,15 @@ export class FinalProject extends Scene {
         if(this.destroy)
             this.earth_fragment.render(context, program_state, model_transform, 1.4, 1000, 0.01, this.reset, 6.7, false,t); // Earth was destroyed by impact, draw with a different material
         else if (this.cratered) // Earth was cratered by impact, draw with a different material
+        {
+            this.materials.cratered_earth.shader.crater_size=0.1;
+            this.materials.cratered_earth.shader.x=1;
+            this.materials.cratered_earth.shader.y=0;
+            this.materials.cratered_earth.shader.z=0;
+            this.materials.cratered_earth.shader.w=1.0;
             this.shapes.s5.draw(context, program_state, earth_transform, this.materials.cratered_earth);
+        }
+            
         else // Earth has not been impacted, draw with base material
             this.shapes.s5.draw(context, program_state, earth_transform, this.materials.earth);
         this.earth = earth_transform;
@@ -217,6 +225,17 @@ export class FinalProject extends Scene {
 }
 
 class Craterable_Texture extends Textured_Phong {
+    // construct any values needed for the texture, to set it do this.materials.cratered_earth.shader.var_name = val
+    constructor(){
+        super();
+        // crater_size of 2.0 covers the whole planet
+        this.crater_size = 0.2;
+        
+        this.x = 0;
+        this.y = 0;
+        this.z = 0;
+        this.w = 0;
+    }
     fragment_glsl_code() {
         return this.shared_glsl_code() + `
             varying vec2 f_tex_coord;
@@ -226,12 +245,9 @@ class Craterable_Texture extends Textured_Phong {
             void main(){
                 vec4 tex_color = texture2D( texture, f_tex_coord);
 
-                // crater_size of 2.0 covers the whole planet
-                float crater_size = 0.1;
-
                 // Draw a red crater
-                if (distance(vec2(0.5, 0.5), vec2(2.0 * f_tex_coord.x, f_tex_coord.y)) < crater_size)
-                    tex_color = vec4(1, 0, 0, 1.0);
+                if (distance(vec2(0.5, 0.5), vec2(2.0 * f_tex_coord.x, f_tex_coord.y)) < ${this.crater_size})
+                    tex_color = vec4(${this.x}, ${this.y}, ${this.z}, ${this.w});
 
                 if( tex_color.w < .01 ) discard;
                                                                          // Compute an initial (ambient) color:
