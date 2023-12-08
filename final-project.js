@@ -73,8 +73,8 @@ export class FinalProject extends Scene {
         this.new_line();
 
         // this.make_slider("Projectile Velocity (m/s):", () => this.projectile_speed = this.slider_value, 10000, 299792457, 10000);
-        this.live_string(box => box.textContent = "Projectile Velocity (m/s): " + (this.slider_value == 0 ? 10000 : this.slider_value));
-        this.make_long_slider(() => this.projectile_speed = this.slider_value, 10000, 299792457, 10000);
+        this.live_string(box => box.textContent = "Projectile Velocity (m/s): " + (this.projectile_speed == 0 ? 100000 : this.projectile_speed));
+        this.make_long_slider(() => this.projectile_speed = this.slider_value, 100000, 299792457, 100000);
         // Lorentz factor = 1 / sqrt(1 - v^2/c^2) where c is speed of light in vacuum
         this.live_string(box => box.textContent = "• Lorentz factor: Î³ = " + (1 / Math.sqrt(1 - (this.projectile_speed ** 2) / (299792458 ** 2))).toFixed(12));
 
@@ -82,7 +82,7 @@ export class FinalProject extends Scene {
         this.new_line();
 
         // this.make_slider("Projectile Radius (m):", () => this.projectile_size = this.slider_value, 1, 6378100, 500000);
-        this.live_string(box => box.textContent = "Projectile Radius (m): " + (this.slider_value == 0 ? 500000 : this.slider_value));
+        this.live_string(box => box.textContent = "Projectile Radius (m): " + (this.projectile_size == 0 ? 500000 : this.projectile_size));
         this.make_long_slider(() => this.projectile_size = this.slider_value, 1, 6378100, 500000);
         this.live_string(box => box.textContent = "• % of Earth's radius: " + (this.projectile_size / 63781).toFixed(4) + "%");
 
@@ -130,6 +130,7 @@ export class FinalProject extends Scene {
 
         // MOON
         let moon_transform = earth_transform.times(Mat4.rotation(t, 0, t, 1)).times(Mat4.translation(2, 0, 0).times(Mat4.rotation(t, 0, t, 1)).times(Mat4.scale(0.1, 0.1, 0.1)));
+        if (this.destroy != true) { }
         this.shapes.s5.draw(context, program_state, moon_transform, this.materials.moon);
         this.moon = moon_transform;
 
