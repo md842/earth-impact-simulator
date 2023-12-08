@@ -191,8 +191,8 @@ export class FinalProject extends Scene {
         function rand_pos_neg() {return Math.random() < 0.5 ? -1 : 1;}
 
         let star_transform = model_transform;
-        let star_count = 300;
-        let star_field_min_radius = 15;     let star_field_max_radius = 40;
+        let star_count = 500;
+        let star_field_min_radius = 10;     let star_field_max_radius = 40;
         let star_min_size = 0.05;           let star_max_size = 0.1;
 
         // call star randomizer once
