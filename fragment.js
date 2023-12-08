@@ -26,14 +26,14 @@ export default class Fragment{
         this.fragment_displacement = 1;
     }
 
-    render(context, program_state, model_transform=Mat4.identity(), size = 1, spawn_num = 0, speed = 1, reset = false, radius = 6.7, forward = false, t) {
+    render(context, program_state, model_transform=Mat4.identity(), size = 1, spawn_num = 0, speed = 1, reset = false, radius = 6.7, forward = 0, t) {
         if(reset){
             this.randomize = true;
             this.fragment_displacement = 1;
         }
         let center_transform = model_transform.times(Mat4.scale(size, size, size));
         this.fragment_displacement += speed;
-        if(this.randomize){
+        if(this.randomize || this.fragment_index.length != spawn_num){
             this.fragment_index = [];
             for(let i = 0; i < spawn_num; i++)
                 this.fragment_index.push(Math.floor(Math.random() * 7));
@@ -47,10 +47,12 @@ export default class Fragment{
             let y = radius * Math.sin(phi) * Math.sin(theta);
             let z = radius * Math.cos(phi);
             let rock_transform = center_transform;
-            if(!forward)
+            if(forward == 0)
                 rock_transform = rock_transform.times(Mat4.translation(x*this.fragment_displacement, y*this.fragment_displacement, z*this.fragment_displacement));
-            else
+            else if(forward == 1)
                 rock_transform = rock_transform.times(Mat4.translation(x*this.fragment_displacement, y*this.fragment_displacement, Math.abs(z*this.fragment_displacement)));
+            else
+                rock_transform = rock_transform.times(Mat4.translation(x*this.fragment_displacement, y*this.fragment_displacement, -Math.abs(z*this.fragment_displacement)));
             if (i%2 == 0)
                 rock_transform = rock_transform.times(Mat4.rotation(t, 0, 0, t));
             else
