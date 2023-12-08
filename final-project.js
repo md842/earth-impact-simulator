@@ -26,6 +26,9 @@ export class FinalProject extends Scene {
         this.projectile_speed = 100000;
         this.projectile_pos = 10 * this.scale;
         this.projectile_size = 500000;
+        this.crater_size = 0;
+        this.max_crater_size = 0.2;
+        this.hit_location = [0.5, 0.5];
 
         this.textures = [new Texture("assets/projectile/meteor.jpg"), new Texture("assets/projectile/apple.jpg"),
             new Texture("assets/projectile/lemon.jpg"), new Texture("assets/projectile/discoball.jpg"),
@@ -122,20 +125,7 @@ export class FinalProject extends Scene {
         // EARTH
         const rotation_multiplier = 0.25; // Control the rotation speed of Earth on its axis
         let earth_transform = model_transform.times(Mat4.rotation(t * rotation_multiplier, t, t / (rotation_multiplier ** 2), 1).times(Mat4.scale(this.scale, this.scale, this.scale)));
-        if(this.destroy)
-            this.earth_fragment.render(context, program_state, model_transform, 1.4, 1000, 0.01, this.reset, 6.7, false,t); // Earth was destroyed by impact, draw with a different material
-        else if (this.cratered) // Earth was cratered by impact, draw with a different material
-        {
-            this.materials.cratered_earth.shader.crater_size=0.1;
-            this.materials.cratered_earth.shader.x=1;
-            this.materials.cratered_earth.shader.y=0;
-            this.materials.cratered_earth.shader.z=0;
-            this.materials.cratered_earth.shader.w=1.0;
-            this.shapes.s5.draw(context, program_state, earth_transform, this.materials.cratered_earth);
-        }
-            
-        else // Earth has not been impacted, draw with base material
-            this.shapes.s5.draw(context, program_state, earth_transform, this.materials.earth);
+
         this.earth = earth_transform;
 
         // MOON
@@ -146,30 +136,51 @@ export class FinalProject extends Scene {
         // PROJECTILE
         let scale_factor = this.scale * this.projectile_size / 6378100.0;
         let projectile_transform = model_transform.times(Mat4.translation(0, 0, this.projectile_pos)).times(Mat4.scale(scale_factor, scale_factor, scale_factor));
+        let relativistic_kinetic_energy = 0;
 
         if(this.projectile_pos + scale_factor < this.scale){ // Hit detection; scale factor of Earth is 15
             this.hit = true;
             // Relativistic kinetic energy: (Lorentz factor - 1)(m_0)(c^2) where m_0 is mass at rest and c is speed of light
-            let relativistic_kinetic_energy = ((1 / Math.sqrt(1 - (this.projectile_speed ** 2)/(299792458 ** 2))) - 1) * this.projectile_size * 299792458 ** 2;
+            relativistic_kinetic_energy = ((1 / Math.sqrt(1 - (this.projectile_speed ** 2)/(299792458 ** 2))) - 1) * this.projectile_size * 299792458 ** 2;
             if (relativistic_kinetic_energy > 1250000000000000) // Threshold for destruction in Joules
                 this.destroy = true;
             else { // Not enough energy to destroy the Earth! Draw a crater instead.
-                let energy_ratio = relativistic_kinetic_energy / 1250000000000000; // Need to figure out how to pass this (and ideally also impact location) to GLSL code
+                this.max_crater_size = relativistic_kinetic_energy / 1250000000000000; // Need to figure out how to pass this (and ideally also impact location) to GLSL code
                 this.cratered = true;
             }
         }
 
+        if(this.destroy)
+            this.earth_fragment.render(context, program_state, model_transform, 10000000000000000/relativistic_kinetic_energy, Math.round(relativistic_kinetic_energy/130000000000000), relativistic_kinetic_energy*0.000000000000000001, this.reset, 6.7, 0,t); // Earth was destroyed by impact, draw with a different material
+        else if (this.cratered) // Earth was cratered by impact, draw with a different material
+        {
+            if(this.crater_size < this.max_crater_size)
+                this.crater_size += 0.0005;
+            this.materials.cratered_earth.shader.crater_size = this.crater_size;
+            this.shapes.s5.draw(context, program_state, earth_transform, this.materials.cratered_earth);
+        }     
+        else // Earth has not been impacted, draw with base material
+            this.shapes.s5.draw(context, program_state, earth_transform, this.materials.earth);
         // TODO: projectile (olive, meatball, volleyball, popcorn, tennis ball, watermelon, character faces, beach ball, saturn, marble, bubble)
         if (!this.hit)
             if(this.launch)
                 this.projectile_pos -= this.scale * this.projectile_speed / 6378100.0; // Move projectile towards Earth based on scale factor
-        if(this.hit)
-            this.projectile_fragment.render(context, program_state, projectile_transform, 0.2, 1000, 1, this.reset, 4, true,t);
+        if(this.hit){
+            if (relativistic_kinetic_energy < 12500000000000000)
+                this.projectile_fragment.render(context, program_state, projectile_transform, Math.min(scale_factor,0.6), Math.min(Math.round(200/scale_factor),30), 0.1/scale_factor, this.reset, 1, 1,t);
+            else
+                this.projectile_fragment.render(context, program_state, projectile_transform, Math.min(scale_factor,0.6), Math.min(Math.round(200/scale_factor),30), 0.1/scale_factor, this.reset, 1, 2,t);
+            this.crater_center = [0.5, 0.5];
+            this.materials.cratered_earth.shader.crater_center = this.crater_center;
+        }
+            
         else
             this.shapes.s5.draw(context, program_state, projectile_transform, this.materials.projectile.override({ambient: 1, texture:this.textures[this.projectile_texture]})); // Draw projectile based on position; will not be drawn after impact
         if(this.reset){
             this.launch = this.hit = this.reset = this.destroy = this.cratered = false;
             this.projectile_pos = 10 * this.scale;
+            this.crater_size = 0;
+            this.max_crater_size = 0.2
         }
 
 
@@ -231,31 +242,36 @@ class Craterable_Texture extends Textured_Phong {
     constructor(){
         super();
         // crater_size of 2.0 covers the whole planet
-        this.crater_size = 0.2;
-        
-        this.x = 0;
-        this.y = 0;
-        this.z = 0;
-        this.w = 0;
+        this.crater_size = 0.01;
+        this.crater_center = [0.5, 0.5];
     }
+    // Fragment shader code
     fragment_glsl_code() {
         return this.shared_glsl_code() + `
             varying vec2 f_tex_coord;
             uniform sampler2D texture;
             uniform float animation_time;
-            
+            uniform float crater_size;
+            uniform vec2 crater_center;
+
             void main(){
                 vec4 tex_color = texture2D( texture, f_tex_coord);
-
                 // Draw a red crater
-                if (distance(vec2(0.5, 0.5), vec2(2.0 * f_tex_coord.x, f_tex_coord.y)) < ${this.crater_size})
-                    tex_color = vec4(${this.x}, ${this.y}, ${this.z}, ${this.w});
-
+                if (distance(crater_center, vec2(2.0 * f_tex_coord.x, f_tex_coord.y)) < crater_size)
+                    tex_color = vec4(1, 0, 0, 1.0);
                 if( tex_color.w < .01 ) discard;
                                                                          // Compute an initial (ambient) color:
                 gl_FragColor = vec4( ( tex_color.xyz + shape_color.xyz ) * ambient, shape_color.w * tex_color.w ); 
                                                                          // Compute the final color with contributions from lights:
                 gl_FragColor.xyz += phong_model_lights( normalize( N ), vertex_worldspace );
         } `;
+    }
+
+    update_GPU(context, gpu_addresses, gpu_state, model_transform, material) {
+        // update_GPU(): Add a little more to the base class's version of this method.
+        super.update_GPU(context, gpu_addresses, gpu_state, model_transform, material);
+        // update any value needed for dynamic crater.
+        context.uniform2f(gpu_addresses.crater_center, this.crater_center[0], this.crater_center[1]);
+        context.uniform1f(gpu_addresses.crater_size, this.crater_size);
     }
 }
