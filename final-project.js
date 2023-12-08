@@ -149,7 +149,7 @@ export class FinalProject extends Scene {
         }
 
         if(this.destroy)
-            this.earth_fragment.render(context, program_state, model_transform, 10000000000000000/relativistic_kinetic_energy, Math.round(relativistic_kinetic_energy/130000000000000), relativistic_kinetic_energy*0.000000000000000001, this.reset, 6.7, 0,t); // Earth was destroyed by impact, draw with a different material
+            this.earth_fragment.render(context, program_state, model_transform, Math.max(10000000000000000/relativistic_kinetic_energy,0.2), Math.min(Math.round(relativistic_kinetic_energy/130000000000000), 5000), Math.min(relativistic_kinetic_energy*0.000000000000000001, 1), this.reset, 6.7, 0,t); // Earth was destroyed by impact, draw with a different material
         else if (this.cratered) // Earth was cratered by impact, draw with a different material
         {
             if(this.crater_size < this.max_crater_size)
