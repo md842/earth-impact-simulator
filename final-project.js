@@ -56,6 +56,8 @@ export class FinalProject extends Scene {
                 {specularity: 0.75, diffusivity: 1, ambient: 0.25, color: hex_color("#FFFFFF")}),
         }
 
+        this.music = new Audio('assets/starrail.mp3');
+
         this.projectile_texture = 0;
 
         this.initial_camera_location = Mat4.look_at(vec3(6, 2 * this.scale, 15 * this.scale), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -88,21 +90,27 @@ export class FinalProject extends Scene {
 
         this.new_line();
         this.new_line();
-        this.key_triggered_button("Randomize Projectile", ["Control", "e"], () => this.projectile_texture = Math.floor(Math.random()*this.textures.length));
-        this.new_line();
-        this.new_line();
+        this.key_triggered_button("Randomize Projectile", ["Control", "e"], () => this.projectile_texture = Math.floor(Math.random() * this.textures.length));
 
         this.key_triggered_button("Launch Projectile", ["Control", "l"], () => this.launch = !this.launch);
+        this.new_line();
+        this.new_line();
+        this.key_triggered_button('Play Music', ["Control", 'm'], () => this.music.play());
         this.key_triggered_button("Reset Simulation", ["Control", "r"], () => this.reset = true);
         this.new_line();
         this.new_line();
         // Kinetic Energy = 0.5*m*v^2
         // Relativistic kinetic energy: (Lorentz factor - 1)(m_0)(c^2) where m_0 is mass at rest and c is speed of light
         this.live_string(box => box.textContent = "Projectile Energy");
+        this.new_line();
         this.live_string(box => box.textContent = "- Classical Kinetic Energy: " + 0.5 * this.projectile_size * this.projectile_speed ** 2 + " Joules");
+        this.new_line()
         this.live_string(box => box.textContent = "- Relativistic Kinetic Energy: " + ((1 / Math.sqrt(1 - (this.projectile_speed ** 2) / (299792458 ** 2))) - 1) * this.projectile_size * 299792458 ** 2 + " Joules");
-    }
 
+        this.new_line()
+        this.new_line()
+    }
+    
     display(context, program_state) {
         // display():  Called once per frame of animation.
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
