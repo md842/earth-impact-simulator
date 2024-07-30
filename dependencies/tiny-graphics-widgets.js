@@ -116,7 +116,7 @@ const Controls_Widget = widgets.Controls_Widget =
         this.panels.push(control_box);
         // Draw top label bar:
         control_box.appendChild(Object.assign(document.createElement("div"), {
-          textContent: scene.constructor.name, className: "control-title"
+          textContent: scene.control_panel_name, className: "control-title"
         }))
 
         const control_panel = control_box.appendChild(document.createElement("div"));

@@ -11,6 +11,9 @@ export class FinalProject extends Scene{
     // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
     super();
 
+    /* Set the name of the control panel associated with this scene */
+    this.control_panel_name = "Simulation Controls";
+
     // At the beginning of our program, load one of each of these shape definitions onto the GPU.
     this.shapes = {s5: new defs.Subdivision_Sphere(5)};
 

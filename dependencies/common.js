@@ -938,6 +938,8 @@ const Movement_Controls = defs.Movement_Controls =
       };
       Object.assign(this, data_members);
 
+      /* Set the name of the control panel associated with this scene */
+      this.control_panel_name = "Camera Controls";
       this.mouse_enabled_canvases = new Set();
       this.will_take_over_graphics_state = true;
     }
