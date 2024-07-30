@@ -6,7 +6,7 @@ const {Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix,
 
 const {Textured_Phong} = defs;
 
-export class FinalProject extends Scene{
+export class Simulation extends Scene{
   constructor(){
     // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
     super();
