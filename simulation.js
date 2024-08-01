@@ -77,19 +77,17 @@ export class Simulation extends Scene{
 
     // this.make_slider("Projectile Velocity (m/s):", () => this.projectile_speed = this.slider_value, 10000, 299792457, 10000);
     this.dynamic_string(box => box.textContent = "Projectile Velocity (m/s): " + (this.projectile_speed == 0 ? 100000 : this.projectile_speed));
-    this.make_long_slider(() => this.projectile_speed = this.slider_value, 100000, 299792457, 100000);
+    this.make_slider(() => this.projectile_speed = this.slider_value, 100000, 299792457, 100000);
     // Lorentz factor = 1 / sqrt(1 - v^2/c^2) where c is speed of light in vacuum
-    this.dynamic_string(box => box.textContent = "• Lorentz factor: Î³ = " + (1 / Math.sqrt(1 - (this.projectile_speed ** 2) / (299792458 ** 2))).toFixed(12));
+    this.dynamic_string(box => box.textContent = "- Lorentz factor: Î³ = " + (1 / Math.sqrt(1 - (this.projectile_speed ** 2) / (299792458 ** 2))).toFixed(12));
 
-    this.new_line();
     this.new_line();
 
     // this.make_slider("Projectile Radius (m):", () => this.projectile_size = this.slider_value, 1, 6378100, 500000);
     this.dynamic_string(box => box.textContent = "Projectile Radius (m): " + (this.projectile_size == 0 ? 500000 : this.projectile_size));
-    this.make_long_slider(() => this.projectile_size = this.slider_value, 1, 6378100, 500000);
-    this.dynamic_string(box => box.textContent = "• % of Earth's radius: " + (this.projectile_size / 63781).toFixed(4) + "%");
+    this.make_slider(() => this.projectile_size = this.slider_value, 1, 6378100, 500000);
+    this.dynamic_string(box => box.textContent = "- % of Earth's radius: " + (this.projectile_size / 63781).toFixed(4) + "%");
 
-    this.new_line();
     this.new_line();
 
     this.key_triggered_button("Launch Projectile", ["l"], () => this.launch = !this.launch);
@@ -100,14 +98,9 @@ export class Simulation extends Scene{
 
     // Kinetic Energy = 0.5*m*v^2
     // Relativistic kinetic energy: (Lorentz factor - 1)(m_0)(c^2) where m_0 is mass at rest and c is speed of light
-    this.dynamic_string(box => box.textContent = "Projectile Energy");
-    this.new_line();
+    this.static_string("Projectile Energy");
     this.dynamic_string(box => box.textContent = "- Classical Kinetic Energy: " + 0.5 * this.projectile_size * this.projectile_speed ** 2 + " Joules");
-    this.new_line()
     this.dynamic_string(box => box.textContent = "- Relativistic Kinetic Energy: " + ((1 / Math.sqrt(1 - (this.projectile_speed ** 2) / (299792458 ** 2))) - 1) * this.projectile_size * 299792458 ** 2 + " Joules");
-
-    this.new_line()
-    this.new_line()
   }
     
   display(context, program_state){

@@ -1414,9 +1414,18 @@ const Scene = tiny.Scene =
         })
       );
 
-      let toggle_state = true;
+      let toggle_state = true; // Only used if toggle_desc was provided
+
+      /* Styling on press/release must be done here rather than in CSS to work
+         with key controls. */
 
       const press = () => {
+        Object.assign(button.style, {
+          'background-color': "var(--bs-btn-active-bg)",
+          'border-color': "var(--bs-btn-active-border-color)",
+          'transform': "scale(1.2)", // Grow by 10%
+          'z-index': "1" // Display above others
+        });
         callback.call(recipient);
         if (toggle_desc){ // Ignore if toggle_desc not supplied
           if (toggle_state)
@@ -1427,6 +1436,12 @@ const Scene = tiny.Scene =
         }
       },
       release = () => {
+        Object.assign(button.style, {
+          'background-color': "var(--bs-btn-bg)",
+          'border-color': "var(--bs-btn-border-color)",
+          'transform': "scale(1)", // Revert to original size
+          'z-index': "0" // Revert to original ordering
+        });
         if (!release_event)
           return;
         release_event.call(recipient);
@@ -1442,67 +1457,34 @@ const Scene = tiny.Scene =
       this.key_controls.add(key_combo, press, release);
     }
 
-    make_slider(label_text, callback, min_val, max_val, default_val,
+    make_slider(callback, min_val, max_val, default_val,
                 recipient = this, parent = this.control_panel){
       // make_slider():  Makes a slider with a specified minimum, maximum, and default value.
-      const container = parent.appendChild(document.createElement("div")); // Create a flex box to display label and slider on the same line
-      container.style.display = "flex";
-      container.style.justifyContent = "space-between";
-      const label = container.appendChild(document.createElement("p")); // Label for the slider
-      label.textContent = label_text;
-      label.style.margin = "auto 0px auto 0px";
-      const sub_container = container.appendChild(document.createElement("div")); // Group the slider and text box on the right
-      sub_container.style.display = "flex";
-      sub_container.style.padding = "2px 0px";
-      const slider = sub_container.appendChild(document.createElement("input")); // Slider
-      slider.style.margin = "auto 5px auto 0px";
-      slider.type = "range";
-      slider.min = min_val;
-      slider.max = max_val;
-      slider.value = default_val;
-      const text_box = sub_container.appendChild(document.createElement("input")); // Text box
-      text_box.style.margin = "auto 0px";
-      text_box.type = "number";
-      text_box.min = min_val;
-      text_box.max = max_val;
-      text_box.value = default_val;
+      const container = parent.appendChild(Object.assign(
+        document.createElement("div"), {
+          className: "input-group", // Bootstrap class name for styling
+        })
+      );
+      
+      const slider = container.appendChild(Object.assign(
+        document.createElement("input"), {
+          className: "form-range", // Bootstrap class name for styling
+          max: max_val,
+          min: min_val,
+          type: "range",
+          value: default_val
+        })
+      );
 
-      const release = () => {
-        this.slider_value = slider.value; // Update program state to match slider
-        text_box.value = slider.value; // Update text box to match slider
-        callback.call(recipient);
-      };
-
-      const text_change = () => {
-        this.slider_value = text_box.value; // Update program state to match text box
-        slider.value = text_box.value; // Update slider to match text box
-        callback.call(recipient);
-      };
-
-      slider.addEventListener("mouseup", release);
-      text_box.addEventListener("input", text_change);
-      return;
-    }
-
-    make_long_slider(callback, min_val, max_val, default_val,
-                     recipient = this, parent = this.control_panel){
-      // make_long_slider():  Makes a longer slider with a specified minimum, maximum, and default value.
-      const container = parent.appendChild(document.createElement("div"));
-      container.style.display = "flex";
-      container.style.justifyContent = "space-between";
-      const slider = container.appendChild(document.createElement("input")); // Slider
-      // slider.style.margin = "auto 0px auto 0px";
-      slider.type = "range";
-      slider.min = min_val;
-      slider.max = max_val;
-      slider.value = default_val;
-      slider.style = "width:75%";
-      const text_box = container.appendChild(document.createElement("input")); // Text box
-      // text_box.style.margin = "auto 0px";
-      text_box.type = "number";
-      text_box.min = min_val;
-      text_box.max = max_val;
-      text_box.value = default_val;
+      const text_box = container.appendChild(Object.assign(
+        document.createElement("input"), {
+          className: "form-control form-control-sm", // Bootstrap class name for styling
+          max: max_val,
+          min: min_val,
+          type: "number",
+          value: default_val
+        })
+      );
 
       const release = () => {
         this.slider_value = slider.value; // Update program state to match slider

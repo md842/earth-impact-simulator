@@ -988,17 +988,18 @@ const Movement_Controls = defs.Movement_Controls =
       // make_control_panel(): Sets up a panel of interactive HTML elements, including
       // buttons with key bindings for affecting this scene, and live info readouts.
       this.static_string("Click and drag the scene to spin your viewpoint around it, or use the controls below.");
+
       this.new_line();
+
       this.dynamic_string(box => box.textContent = "Position: " + this.pos[0].toFixed(2) + ", " + this.pos[1].toFixed(2)
         + ", " + this.pos[2].toFixed(2));
-      this.new_line();
       // The facing directions are surprisingly affected by the left hand rule:
       this.dynamic_string(box => box.textContent = "Facing: " + ((this.z_axis[0] > 0 ? "West " : "East ")
         + (this.z_axis[1] > 0 ? "Down " : "Up ") + (this.z_axis[2] > 0 ? "North" : "South")));
-      this.new_line();
+
       this.new_line();
 
-      this.key_triggered_button("Reset Camera", ["r"], () => {
+      this.key_triggered_button("Reset Camera", ["c"], () => {
         this.inverse().set(Mat4.look_at(vec3(6, 6, 45), vec3(0, 0, 0), vec3(0, 1, 0)));
         this.matrix().set(Mat4.inverse(this.inverse()));
       });
