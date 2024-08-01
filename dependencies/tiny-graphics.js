@@ -1378,42 +1378,68 @@ const Scene = tiny.Scene =
       parent.appendChild(document.createElement("br"))
     }
 
-    live_string(callback, parent = this.control_panel){
-      // live_string(): Create an element somewhere in the control panel that
+    dynamic_string(callback, parent = this.control_panel){
+      // dynamic_string(): Create an element somewhere in the control panel that
       // does reporting of the scene's values in real time.  The event loop
       // will constantly update all HTML elements made this way.
       parent.appendChild(Object.assign(document.createElement("div"), {
-        className: "live_string",
+        className: "dynamic_string",
         onload: callback
       }));
     }
 
-    key_triggered_button(description, shortcut_combination, callback,
-                         release_event, recipient = this, parent = this.control_panel){
+    static_string(content, parent = this.control_panel){
+      // static_string(): Create an element somewhere in the control panel that
+      // does reporting of the scene's values in real time.  The event loop
+      // will constantly update all HTML elements made this way.
+      parent.appendChild(Object.assign(document.createElement("div"), {
+        textContent: content, className: "static_string",
+      }));
+    }
+
+    key_triggered_button(desc, key_combo, callback, release_event, toggle_desc,
+                         recipient = this, parent = this.control_panel){
       // key_triggered_button():  Trigger any scene behavior by assigning
       // a key shortcut and a labelled HTML button to fire any callback
-      // function/method of a Scene.  Optional release callback as well.
-      const button = parent.appendChild(Object.assign(document.createElement("button"), {
-        className: "btn btn-primary" // Bootstrap class name for styling
-      }));
+      // function/method of a Scene.
+
+      // desc: default description text (required)
+      // key_combo: the key combination to bind to this button (required)
+      // callback: the action to perform when pressed (required)
+      // release_event: the action to perform when released (optional)
+      // toggle_desc: description text to change to when toggled (optional)
+      const button = parent.appendChild(Object.assign(
+        document.createElement("button"), {
+          className: "btn btn-primary", // Bootstrap class name for styling
+        })
+      );
+
+      let toggle_state = true;
 
       const press = () => {
         callback.call(recipient);
+        if (toggle_desc){ // Ignore if toggle_desc not supplied
+          if (toggle_state)
+            button.textContent = "(" + key_name + ") " + toggle_desc;
+          else
+            button.textContent = "(" + key_name + ") " + desc;
+          toggle_state = !toggle_state; // Toggle toggle_state
+        }
       },
       release = () => {
         if (!release_event)
           return;
         release_event.call(recipient);
       };
-      const key_name = shortcut_combination.join('+').split(" ").join("Space");
-      button.textContent = "(" + key_name + ") " + description;
+      const key_name = key_combo.join('+').split(" ").join("Space");
+      button.textContent = "(" + key_name + ") " + desc;
       button.addEventListener("mousedown", press);
       button.addEventListener("mouseup", release);
       button.addEventListener("touchstart", press, {passive: true});
       button.addEventListener("touchend", release, {passive: true});
-      if (!shortcut_combination)
+      if (!key_combo)
         return;
-      this.key_controls.add(shortcut_combination, press, release);
+      this.key_controls.add(key_combo, press, release);
     }
 
     make_slider(label_text, callback, min_val, max_val, default_val,

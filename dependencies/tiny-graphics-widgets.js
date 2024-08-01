@@ -80,7 +80,7 @@ const Controls_Widget = widgets.Controls_Widget =
         this.panels.push(control_box);
         // Draw top label bar:
         control_box.appendChild(Object.assign(document.createElement("div"), {
-          textContent: scene.control_panel_name, className: "control-title"
+          textContent: scene.control_panel_name, className: "control-title bg-dark"
         }))
 
         const control_panel = control_box.appendChild(document.createElement("div"));
@@ -109,7 +109,7 @@ const Controls_Widget = widgets.Controls_Widget =
       }
 
       for (let panel of this.panels)
-        for (let live_string of panel.querySelectorAll(".live_string")) live_string.onload(live_string);
+        for (let dynamic_string of panel.querySelectorAll(".dynamic_string")) dynamic_string.onload(dynamic_string);
       // TODO: Cap this so that it can't be called faster than a human can read?
       this.event = window.requestAnimFrame(this.render.bind(this));
     }

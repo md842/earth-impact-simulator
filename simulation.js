@@ -22,6 +22,8 @@ export class Simulation extends Scene{
 
     this.scale = 3.0;
 
+    this.attached = () => null;
+
     this.launch = this.hit = this.reset = this.destroy = this.cratered = false;
     this.projectile_speed = 100000;
     this.projectile_pos = 10 * this.scale;
@@ -32,19 +34,7 @@ export class Simulation extends Scene{
 
     let assets = "simulations/earth-impact-simulator/assets/"; /* Assets path */
 
-    this.textures = [
-      new Texture(assets + "projectile/meteor.jpg"),
-      new Texture(assets + "projectile/apple.jpg"),
-      new Texture(assets + "projectile/lemon.jpg"),
-      new Texture(assets + "projectile/discoball.jpg"),
-      new Texture(assets + "projectile/pokeball.png"),
-      new Texture(assets + "projectile/masterball.png"),
-      new Texture(assets + "projectile/yarn.jpg"),
-      new Texture(assets + "earth.gif"),
-      new Texture(assets + "projectile/8ball.png"),
-      new Texture(assets + "projectile/kirby.jpg"),
-      new Texture(assets + "projectile/childe.png")
-    ];
+    this.textures = [new Texture(assets + "meteor.jpg")];
 
     // Define the materials used to draw the Earth and its moon.
     const bump = new defs.Fake_Bump_Map(1);
@@ -76,43 +66,45 @@ export class Simulation extends Scene{
   make_control_panel(){
     // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
     this.new_line();
-    this.key_triggered_button("Free Camera", ["Control", "s"], () => this.attached = () => null);
-    this.key_triggered_button("Projectile Camera", ["Control", "d"], () => this.attached = () => this.projectile);
+    // Optional toggle_desc supplied, becomes a toggle button
+    this.key_triggered_button("Attach Camera to Projectile", ["t"],
+                              () => {if (this.attached() == null)
+                                      this.attached = () => this.projectile
+                                     else this.attached = () => null},
+                              undefined, "Detach Camera from Projectile");
     this.new_line();
     this.new_line();
 
     // this.make_slider("Projectile Velocity (m/s):", () => this.projectile_speed = this.slider_value, 10000, 299792457, 10000);
-    this.live_string(box => box.textContent = "Projectile Velocity (m/s): " + (this.projectile_speed == 0 ? 100000 : this.projectile_speed));
+    this.dynamic_string(box => box.textContent = "Projectile Velocity (m/s): " + (this.projectile_speed == 0 ? 100000 : this.projectile_speed));
     this.make_long_slider(() => this.projectile_speed = this.slider_value, 100000, 299792457, 100000);
     // Lorentz factor = 1 / sqrt(1 - v^2/c^2) where c is speed of light in vacuum
-    this.live_string(box => box.textContent = "• Lorentz factor: Î³ = " + (1 / Math.sqrt(1 - (this.projectile_speed ** 2) / (299792458 ** 2))).toFixed(12));
+    this.dynamic_string(box => box.textContent = "• Lorentz factor: Î³ = " + (1 / Math.sqrt(1 - (this.projectile_speed ** 2) / (299792458 ** 2))).toFixed(12));
 
     this.new_line();
     this.new_line();
 
     // this.make_slider("Projectile Radius (m):", () => this.projectile_size = this.slider_value, 1, 6378100, 500000);
-    this.live_string(box => box.textContent = "Projectile Radius (m): " + (this.projectile_size == 0 ? 500000 : this.projectile_size));
+    this.dynamic_string(box => box.textContent = "Projectile Radius (m): " + (this.projectile_size == 0 ? 500000 : this.projectile_size));
     this.make_long_slider(() => this.projectile_size = this.slider_value, 1, 6378100, 500000);
-    this.live_string(box => box.textContent = "• % of Earth's radius: " + (this.projectile_size / 63781).toFixed(4) + "%");
+    this.dynamic_string(box => box.textContent = "• % of Earth's radius: " + (this.projectile_size / 63781).toFixed(4) + "%");
 
     this.new_line();
     this.new_line();
-    this.key_triggered_button("Randomize Projectile", ["Control", "e"], () => this.projectile_texture = Math.floor(Math.random() * this.textures.length));
 
-    this.key_triggered_button("Launch Projectile", ["Control", "l"], () => this.launch = !this.launch);
+    this.key_triggered_button("Launch Projectile", ["l"], () => this.launch = !this.launch);
+    this.key_triggered_button("Reset Simulation", ["r"], () => this.reset = true);
+
     this.new_line();
     this.new_line();
-    this.key_triggered_button('Play Music', ["Control", 'm'], () => this.music.play());
-    this.key_triggered_button("Reset Simulation", ["Control", "r"], () => this.reset = true);
-    this.new_line();
-    this.new_line();
+
     // Kinetic Energy = 0.5*m*v^2
     // Relativistic kinetic energy: (Lorentz factor - 1)(m_0)(c^2) where m_0 is mass at rest and c is speed of light
-    this.live_string(box => box.textContent = "Projectile Energy");
+    this.dynamic_string(box => box.textContent = "Projectile Energy");
     this.new_line();
-    this.live_string(box => box.textContent = "- Classical Kinetic Energy: " + 0.5 * this.projectile_size * this.projectile_speed ** 2 + " Joules");
+    this.dynamic_string(box => box.textContent = "- Classical Kinetic Energy: " + 0.5 * this.projectile_size * this.projectile_speed ** 2 + " Joules");
     this.new_line()
-    this.live_string(box => box.textContent = "- Relativistic Kinetic Energy: " + ((1 / Math.sqrt(1 - (this.projectile_speed ** 2) / (299792458 ** 2))) - 1) * this.projectile_size * 299792458 ** 2 + " Joules");
+    this.dynamic_string(box => box.textContent = "- Relativistic Kinetic Energy: " + ((1 / Math.sqrt(1 - (this.projectile_speed ** 2) / (299792458 ** 2))) - 1) * this.projectile_size * 299792458 ** 2 + " Joules");
 
     this.new_line()
     this.new_line()
@@ -176,7 +168,6 @@ export class Simulation extends Scene{
     }     
     else // Earth has not been impacted, draw with base material
       this.shapes.s5.draw(context, program_state, earth_transform, this.materials.earth);
-    // TODO: projectile (olive, meatball, volleyball, popcorn, tennis ball, watermelon, character faces, beach ball, saturn, marble, bubble)
     if (!this.hit)
       if (this.launch)
         this.projectile_pos -= this.scale * this.projectile_speed / 6378100.0; // Move projectile towards Earth based on scale factor
@@ -237,16 +228,15 @@ export class Simulation extends Scene{
     this.projectile = projectile_transform;
 
     let desired = this.initial_camera_location;
-    if (this.attached === undefined){}
-    else{
-      if (this.attached() == null){
-        program_state.set_camera(this.initial_camera_location.map((x,i) =>
-          Vector.from(program_state.camera_inverse[i]).mix(x, 0.1)));
-      }
-      if(!!this.attached()){desired = Mat4.inverse(this.attached().times(Mat4.translation(0,10,50)));} // Dynamic view offset
-      desired.map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
-      program_state.set_camera(desired);
+    if (this.attached() == null){
+      program_state.set_camera(this.initial_camera_location.map((x,i) =>
+        Vector.from(program_state.camera_inverse[i]).mix(x, 0.1)));
     }
+    if (!!this.attached()){ // Dynamic view offset
+      desired = Mat4.inverse(this.attached().times(Mat4.translation(0,10,50)));
+    }
+    desired.map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
+    program_state.set_camera(desired);
   }
 }
 
