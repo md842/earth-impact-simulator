@@ -7,7 +7,7 @@ const {Obj_Shape} = defs;
 
 export default class Fragment{
   constructor(){
-    let assets = "earth-impact-simulator/assets/"; /* Assets path */
+    let assets = "simulations/earth-impact-simulator/assets/"; /* Assets path */
     this.shapes = {
       fragments: [new Obj_Shape(assets + "fragment1.obj"),
                   new Obj_Shape(assets + "fragment2.obj"),
