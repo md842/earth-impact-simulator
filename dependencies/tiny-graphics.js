@@ -686,7 +686,7 @@ const Keyboard_Manager = tiny.Keyboard_Manager =
       // Don't interfere with typing.
       this.actively_pressed_keys.add(event.key);
       // Track the pressed key.
-      for (let saved of Object.values(this.saved_controls)) {
+      for (let saved of Object.values(this.saved_controls)){
         // Re-check all the keydown handlers.
         if (saved.shortcut_combination.every(s => this.actively_pressed_keys.has(s))
             && event.ctrlKey == saved.shortcut_combination.includes("Control")
@@ -1429,9 +1429,9 @@ const Scene = tiny.Scene =
         callback.call(recipient);
         if (toggle_desc){ // Ignore if toggle_desc not supplied
           if (toggle_state)
-            button.textContent = "(" + key_name + ") " + toggle_desc;
+            button.textContent = key_combo_str + toggle_desc;
           else
-            button.textContent = "(" + key_name + ") " + desc;
+            button.textContent = key_combo_str + desc;
           toggle_state = !toggle_state; // Toggle toggle_state
         }
       },
@@ -1446,8 +1446,23 @@ const Scene = tiny.Scene =
           return;
         release_event.call(recipient);
       };
-      const key_name = key_combo.join('+').split(" ").join("Space");
-      button.textContent = "(" + key_name + ") " + desc;
+      
+      let key_combo_str = "(";
+      for (let i = 0; i < key_combo.length; i++){
+        if (key_combo[i] == " ") // Special case: Space
+          key_combo_str += "Space";
+        else if (key_combo[i] == "Control") // Special case: Ctrl
+          key_combo_str += "Ctrl"
+        else // Capitalize first letter
+          key_combo_str += key_combo[i].charAt(0).toUpperCase() + key_combo[i].slice(1);
+
+        if (i < key_combo.length - 1)
+          key_combo_str += " + ";
+        else
+          key_combo_str += ") ";
+      }
+
+      button.textContent = key_combo_str + desc;
       button.addEventListener("mousedown", press);
       button.addEventListener("mouseup", release);
       button.addEventListener("touchstart", press, {passive: true});

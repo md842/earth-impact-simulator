@@ -22,7 +22,7 @@ export class Simulation extends Scene{
 
     this.scale = 3.0;
 
-    this.attached = () => null;
+    this.attached = () => null; // Initialize this.attached for camera control
 
     this.launch = this.hit = this.reset = this.destroy = this.cratered = false;
     this.projectile_speed = 100000;
@@ -65,13 +65,9 @@ export class Simulation extends Scene{
 
   make_control_panel(){
     // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-    this.new_line();
-    // Optional toggle_desc supplied, becomes a toggle button
-    this.key_triggered_button("Attach Camera to Projectile", ["t"],
-                              () => {if (this.attached() == null)
-                                      this.attached = () => this.projectile
-                                     else this.attached = () => null},
-                              undefined, "Detach Camera from Projectile");
+    this.key_triggered_button("Launch Projectile", ["l"], () => this.launch = !this.launch);
+    this.key_triggered_button("Reset Simulation", ["r"], () => this.reset = true);
+    
     this.new_line();
     this.new_line();
 
@@ -90,17 +86,23 @@ export class Simulation extends Scene{
 
     this.new_line();
 
-    this.key_triggered_button("Launch Projectile", ["l"], () => this.launch = !this.launch);
-    this.key_triggered_button("Reset Simulation", ["r"], () => this.reset = true);
-
-    this.new_line();
-    this.new_line();
-
     // Kinetic Energy = 0.5*m*v^2
     // Relativistic kinetic energy: (Lorentz factor - 1)(m_0)(c^2) where m_0 is mass at rest and c is speed of light
     this.static_string("Projectile Energy");
     this.dynamic_string(box => box.textContent = "- Classical Kinetic Energy: " + 0.5 * this.projectile_size * this.projectile_speed ** 2 + " Joules");
     this.dynamic_string(box => box.textContent = "- Relativistic Kinetic Energy: " + ((1 / Math.sqrt(1 - (this.projectile_speed ** 2) / (299792458 ** 2))) - 1) * this.projectile_size * 299792458 ** 2 + " Joules");
+
+    this.new_line();
+
+    // Optional toggle_desc supplied, becomes a toggle button
+    this.key_triggered_button("Attach Camera to Projectile", ["p"],
+                              () => {
+                                if (this.attached() == null)
+                                  this.attached = () => this.projectile
+                                else
+                                  this.attached = () => null
+                              },
+                              undefined, "Detach Camera from Projectile");
   }
     
   display(context, program_state){
