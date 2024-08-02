@@ -78,13 +78,23 @@ const Controls_Widget = widgets.Controls_Widget =
 
         const control_box = this.row.insertCell();
         this.panels.push(control_box);
+
+        /* Append to className to allow further CSS customization of individual
+           control panels. */
+        let classNamePostfix = scene.control_panel_name.toLowerCase().replace(" ", "-");
+
         // Draw top label bar:
         control_box.appendChild(Object.assign(document.createElement("div"), {
-          textContent: scene.control_panel_name, className: "control-title bg-dark"
+          textContent: scene.control_panel_name,
+          // Bootstrap class name for styling.
+          className: "control-title bg-dark " + classNamePostfix
         }))
 
-        const control_panel = control_box.appendChild(document.createElement("div"));
-        control_panel.className = "control-div";
+        const control_panel = control_box.appendChild(Object.assign(document.createElement("div"), {
+          // Bootstrap class name for styling.
+          className: "control-div " + classNamePostfix
+        }))
+
         scene.control_panel = control_panel;
         scene.timestamp = time;
         // Draw each registered animation:

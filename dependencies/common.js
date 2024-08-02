@@ -1003,52 +1003,92 @@ const Movement_Controls = defs.Movement_Controls =
         this.inverse().set(Mat4.look_at(vec3(6, 6, 45), vec3(0, 0, 0), vec3(0, 1, 0)));
         this.matrix().set(Mat4.inverse(this.inverse()));
       });
-
-      this.new_line();
-      this.new_line();
-
-      this.key_triggered_button("Up", [" "], () => this.thrust[1] = -1, () => this.thrust[1] = 0);
-      this.key_triggered_button("Down", ["Shift"], () => this.thrust[1] = 1, () => this.thrust[1] = 0);
-      this.new_line();
-      this.key_triggered_button("Forward", ["w"], () => this.thrust[2] = 1, () => this.thrust[2] = 0);
-      this.key_triggered_button("Left", ["a"], () => this.thrust[0] = 1, () => this.thrust[0] = 0);
-      this.key_triggered_button("Back", ["s"], () => this.thrust[2] = -1, () => this.thrust[2] = 0);
-      this.key_triggered_button("Right", ["d"], () => this.thrust[0] = -1, () => this.thrust[0] = 0);
-
-      this.new_line();
-      this.new_line();
-
-      this.key_triggered_button("Roll left", ["q"], () => this.roll = 0.1, () => this.roll = 0);
-      this.key_triggered_button("Roll right", ["e"], () => this.roll = -0.1, () => this.roll = 0);
-
-      this.new_line();
       this.key_triggered_button("Unlock mouse look-around", ["m"],
-                                () => this.look_around_locked ^= 1,
-                                undefined, "Lock mouse look-around");
+        () => this.look_around_locked ^= 1,
+        undefined, "Lock mouse look-around");
+
       this.new_line();
+      this.new_line();
+
+      // Button group Q, W, E
+      let parent_div = this.div("movement-button-row");
+      this.key_triggered_button("Roll Left", ["q"],
+                                () => this.roll = 0.1,
+                                () => this.roll = 0,
+                                undefined, this, parent_div);
+      this.key_triggered_button("Forward", ["w"],
+                                () => this.thrust[2] = 1,
+                                () => this.thrust[2] = 0,
+                                undefined, this, parent_div);
+      this.key_triggered_button("Roll Right", ["e"],
+                                () => this.roll = -0.1,
+                                () => this.roll = 0,
+                                undefined, this, parent_div);
+
+      // Button group A, S, D
+      parent_div = this.div("movement-button-row");
+      this.key_triggered_button("Left", ["a"],
+                                () => this.thrust[0] = 1,
+                                () => this.thrust[0] = 0,
+                                undefined, this, parent_div);
+      this.key_triggered_button("Back", ["s"],
+                                () => this.thrust[2] = -1,
+                                () => this.thrust[2] = 0,
+                                undefined, this, parent_div);
+      this.key_triggered_button("Right", ["d"],
+                                () => this.thrust[0] = -1,
+                                () => this.thrust[0] = 0,
+                                undefined, this, parent_div);
+
+      this.new_line();
+
+      // Button group Up, Down
+      parent_div = this.div("movement-button-row");
+      this.key_triggered_button("Up", [" "],
+                                () => this.thrust[1] = -1,
+                                () => this.thrust[1] = 0,
+                                undefined, this, parent_div);
+      this.key_triggered_button("Down", ["Shift"],
+                                () => this.thrust[1] = 1,
+                                () => this.thrust[1] = 0,
+                                undefined, this, parent_div);
+
       this.new_line();
 
       this.static_string("Look at origin from:");
+
+      // Button group for Front with two placeholders
+      parent_div = this.div("movement-button-row");
+      this.button_placeholder(parent_div);
       this.key_triggered_button("Front", ["1"], () => {
         this.inverse().set(Mat4.look_at(vec3(0, 0, 10), vec3(0, 0, 0), vec3(0, 1, 0)));
         this.matrix().set(Mat4.inverse(this.inverse()));
-      });
-      this.key_triggered_button("Back", ["2"], () => {
-        this.inverse().set(Mat4.look_at(vec3(0, 0, -10), vec3(0, 0, 0), vec3(0, 1, 0)));
-        this.matrix().set(Mat4.inverse(this.inverse()));
-      });
-      this.key_triggered_button("Left", ["3"], () => {
+      }, undefined, undefined, this, parent_div);
+      this.button_placeholder(parent_div);
+
+      // Button group for Left, Origin, Right
+      parent_div = this.div("movement-button-row");
+      this.key_triggered_button("Left", ["2"], () => {
         this.inverse().set(Mat4.look_at(vec3(-10, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)));
         this.matrix().set(Mat4.inverse(this.inverse()));
-      });
-      this.key_triggered_button("Right", ["4"], () => {
-        this.inverse().set(Mat4.look_at(vec3(10, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)));
-        this.matrix().set(Mat4.inverse(this.inverse()));
-      });
+      }, undefined, undefined, this, parent_div);
       this.key_triggered_button("Origin", ["0"], () => {
         this.matrix().set_identity(4, 4);
         this.inverse().set_identity(4, 4)
-      });
+      }, undefined, undefined, this, parent_div);
+      this.key_triggered_button("Right", ["3"], () => {
+        this.inverse().set(Mat4.look_at(vec3(10, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)));
+        this.matrix().set(Mat4.inverse(this.inverse()));
+      }, undefined, undefined, this, parent_div);
+
+      // Button group for Back with two placeholders
+      parent_div = this.div("movement-button-row");
+      this.button_placeholder(parent_div);
+      this.key_triggered_button("Back", ["4"], () => {
+        this.inverse().set(Mat4.look_at(vec3(0, 0, -10), vec3(0, 0, 0), vec3(0, 1, 0)));
+        this.matrix().set(Mat4.inverse(this.inverse()));
+      }, undefined, undefined, this, parent_div);
+      this.button_placeholder(parent_div);
     }
 
     first_person_flyaround(radians_per_frame, meters_per_frame, leeway = 70){

@@ -1378,11 +1378,21 @@ const Scene = tiny.Scene =
       parent.appendChild(document.createElement("br"))
     }
 
+    div(name, parent = this.control_panel){
+      const button_group = parent.appendChild(Object.assign(
+        document.createElement("div"), {
+          /* Allows CSS customization of individual divs. */
+          className: name.toLowerCase().replace(" ", "-")
+        })
+      );
+      return button_group;
+    }
+
     dynamic_string(callback, parent = this.control_panel){
       // dynamic_string(): Create an element somewhere in the control panel that
       // does reporting of the scene's values in real time.  The event loop
       // will constantly update all HTML elements made this way.
-      parent.appendChild(Object.assign(document.createElement("div"), {
+      parent.appendChild(Object.assign(document.createElement("p"), {
         className: "dynamic_string",
         onload: callback
       }));
@@ -1392,9 +1402,22 @@ const Scene = tiny.Scene =
       // static_string(): Create an element somewhere in the control panel that
       // does reporting of the scene's values in real time.  The event loop
       // will constantly update all HTML elements made this way.
-      parent.appendChild(Object.assign(document.createElement("div"), {
+      parent.appendChild(Object.assign(document.createElement("p"), {
         textContent: content, className: "static_string",
       }));
+    }
+
+    button_placeholder(parent = this.control_panel){
+      // button_placeholder():  Adds an invisible button. Useful for spacing
+      // in button group divs.
+      // parent: the parent element to append child elements to
+      const button = parent.appendChild(Object.assign(
+        document.createElement("button"), {
+          /* Bootstrap class name for styling. Appends description to allow
+             further CSS customization of individual buttons. */
+          className: "btn btn-primary placeholder"
+        })
+      );
     }
 
     key_triggered_button(desc, key_combo, callback, release_event, toggle_desc,
@@ -1408,9 +1431,13 @@ const Scene = tiny.Scene =
       // callback: the action to perform when pressed (required)
       // release_event: the action to perform when released (optional)
       // toggle_desc: description text to change to when toggled (optional)
+      // recipient: callback target
+      // parent: the parent element to append child elements to
       const button = parent.appendChild(Object.assign(
         document.createElement("button"), {
-          className: "btn btn-primary", // Bootstrap class name for styling
+          /* Bootstrap class name for styling. Appends description to allow
+             further CSS customization of individual buttons. */
+          className: "btn btn-primary " + desc.toLowerCase().replace(" ", "-")
         })
       );
 
