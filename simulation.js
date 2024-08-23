@@ -32,7 +32,7 @@ export class Simulation extends Scene{
     this.max_crater_size = 0.2;
     this.hit_location = [0.5, 0.5];
 
-    let assets = "/simulations/earth-impact-simulator/assets/"; /* Assets path */
+    let assets = "/earth-impact-simulator/assets/"; /* Assets path */
 
     this.textures = [new Texture(assets + "meteor.jpg")];
 
