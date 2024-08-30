@@ -1331,6 +1331,18 @@ const Webgl_Manager = tiny.Webgl_Manager =
     render(time = 0){
       // render(): Draw a single frame of animation, using all loaded Scene objects.  Measure
       // how much real time has transpired in order to animate shapes' movements accordingly.
+
+      /* There doesn't seem to be a way to reset the WebGL state, even after
+         days of bashing my head into a wall, deleting everything about the
+         object, creating a new Webgl_Manager, new Program_State, etc. Render
+         time never stops ticking up even when cancelAnimationFrame has been
+         called, we're literally on a different page, every single property of
+         every related object has been deleted, etc. etc. etc. So, this is my
+         hacky workaround to get animation_time to start from 0 when unloading
+         and reloading the canvas. I don't like it, but it works. */
+      if (!this.prev_time) // Means new Webgl_Manager was created
+        this.prev_time = time; // Offset prev_time by the WebGL state time
+
       this.program_state.animation_delta_time = time - this.prev_time;
       if (this.program_state.animate)
         this.program_state.animation_time += this.program_state.animation_delta_time;

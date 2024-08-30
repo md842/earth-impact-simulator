@@ -1,13 +1,12 @@
 import {defs, tiny} from './dependencies/common.js';
 
-const {Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix,
-       Mat4, Light, Material, Texture, Shape, Scene} = tiny;
-
+// Pull the following names into this module's scope for convenience
 const {Obj_Shape} = defs;
+const {color, Mat4, Material} = tiny;
 
 export default class Fragment{
   constructor(){
-    let assets = "/earth-impact-simulator/assets/"; /* Assets path */
+    let assets = "earth-impact-simulator/assets/"; /* Assets path */
     this.shapes = {
       fragments: [new Obj_Shape(assets + "fragment1.obj"),
                   new Obj_Shape(assets + "fragment2.obj"),

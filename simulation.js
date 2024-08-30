@@ -1,12 +1,14 @@
 import {defs, tiny} from './dependencies/common.js';
 import Fragment from './fragment.js';
 
-const {Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix,
-       Mat4, Light, Material, Texture, Shape, Scene} = tiny;
-
+// Pull the following names into this module's scope for convenience
 const {Textured_Phong} = defs;
+const {Vector, vec3, vec4, color, hex_color, Mat4, Light, Material, Texture,
+       Scene, Canvas_Widget} = tiny;
 
-export class Simulation extends Scene{
+export {Simulation, Canvas_Widget};
+
+class Simulation extends Scene{
   constructor(){
     // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
     super();
@@ -32,7 +34,14 @@ export class Simulation extends Scene{
     this.max_crater_size = 0.2;
     this.hit_location = [0.5, 0.5];
 
-    let assets = "/earth-impact-simulator/assets/"; /* Assets path */
+    // Variables for FPS calculation logic
+    this.avg_fps = 0;
+    this.cur_fps = 0;
+    this.frames = 0; // Number of frames rendered in this FPS time window
+    this.total_frames = 0; // Number of total frames rendered by the simulation
+    this.next_fps_time = 1; // The next time at which FPS will be calculated
+
+    let assets = "earth-impact-simulator/assets/"; /* Assets path */
 
     this.textures = [new Texture(assets + "meteor.jpg")];
 
@@ -60,7 +69,40 @@ export class Simulation extends Scene{
     this.initial_camera_location = Mat4.look_at(vec3(6, 2 * this.scale, 15 * this.scale), vec3(0, 0, 0), vec3(0, 1, 0));
 
     this.star_transforms = [];
-    this.star_colors = [hex_color("#ffa6a6"),hex_color("#ffcaa6"),hex_color("#ffeca6"),hex_color("#a6fff9"),hex_color("#a6d4ff"),hex_color("#a6b0ff")];
+    this.init_star_transforms(500); // Run one time to initialize star transforms
+    this.star_colors = [
+      hex_color("#ffa6a6"),
+      hex_color("#ffcaa6"),
+      hex_color("#ffeca6"),
+      hex_color("#a6fff9"),
+      hex_color("#a6d4ff"),
+      hex_color("#a6b0ff")
+    ];
+  }
+
+  init_star_transforms(star_count){
+    function rand_int(min, max){return Math.round(100 * (min + Math.random() * max)) / 100;}
+    function rand_pos_neg(){return Math.random() < 0.5 ? -1 : 1;}
+
+    let star_field_min_radius = 10;     let star_field_max_radius = 40;
+    let star_min_size = 0.05;           let star_max_size = 0.1;
+
+    // Generate random star transforms
+    for (let i = 0; i < star_count; i++){
+      let star_scale = rand_int(star_min_size, star_max_size);
+      let star_trans_x = rand_pos_neg() * rand_int(0, star_field_max_radius);
+      let star_trans_y = rand_pos_neg() * rand_int(0, star_field_max_radius);
+      let star_trans_z = rand_pos_neg() * rand_int(0, star_field_max_radius);
+      // re-roll if point under minimum radius
+      while (Math.sqrt(star_trans_x ** 2 + star_trans_y ** 2 + star_trans_z ** 2) < star_field_min_radius){
+        star_trans_x = rand_pos_neg() * rand_int(star_field_min_radius, star_field_max_radius);
+        star_trans_y = rand_pos_neg() * rand_int(star_field_min_radius, star_field_max_radius);
+        star_trans_z = rand_pos_neg() * rand_int(star_field_min_radius, star_field_max_radius);
+      }
+      this.star_transforms.push(
+        Mat4.translation(star_trans_x, star_trans_y, star_trans_z).times(
+          Mat4.scale(star_scale,star_scale,star_scale)));
+    }
   }
 
   make_control_panel(){
@@ -103,6 +145,11 @@ export class Simulation extends Scene{
                                   this.attached = () => null
                               },
                               undefined, "Detach Camera from Projectile");
+
+    this.new_line();
+    this.new_line();
+    this.dynamic_string(box => box.textContent = "Current FPS: " + this.cur_fps);
+    this.dynamic_string(box => box.textContent = "Average FPS: " + this.avg_fps);
   }
     
   display(context, program_state){
@@ -120,7 +167,19 @@ export class Simulation extends Scene{
     program_state.projection_transform = Mat4.perspective(
       Math.PI / 4, context.width / context.height, .1, 10000);
 
-    const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
+    const t = program_state.animation_time / 1000;
+
+    // Lightweight FPS calculation logic
+    this.frames++; // Increment frames; display() runs once per frame
+    if (t > this.next_fps_time){ // Reached next FPS time, calculate FPS
+      // Current FPS is number of frames rendered in last FPS time window
+      this.cur_fps = this.frames;
+      this.total_frames += this.frames;
+      this.avg_fps = ~~(this.total_frames / t); // Efficient floor division
+
+      this.frames = 0; // Reset frame counter for next FPS time window
+      this.next_fps_time++; // Set next FPS time window
+    }
 
     let model_transform = Mat4.identity();
 
@@ -137,7 +196,7 @@ export class Simulation extends Scene{
     this.moon = moon_transform;
 
     // PROJECTILE
-    let scale_factor = this.scale * this.projectile_size / 6378100.0;
+    let scale_factor = this.scale * this.projectile_size / 6378100;
     let projectile_transform = model_transform.times(Mat4.translation(0, 0, this.projectile_pos)).times(Mat4.scale(scale_factor, scale_factor, scale_factor));
     let relativistic_kinetic_energy = 0;
 
@@ -165,7 +224,7 @@ export class Simulation extends Scene{
       this.shapes.s5.draw(context, program_state, earth_transform, this.materials.earth);
     if (!this.hit)
       if (this.launch)
-        this.projectile_pos -= this.scale * this.projectile_speed / 6378100.0; // Move projectile towards Earth based on scale factor
+        this.projectile_pos -= this.scale * this.projectile_speed / 6378100; // Move projectile towards Earth based on scale factor
     if (this.hit){
       if (relativistic_kinetic_energy < 12500000000000000)
         this.projectile_fragment.render(context, program_state, projectile_transform, Math.min(scale_factor,0.6), Math.min(Math.round(200/scale_factor),30), 0.1/scale_factor, this.reset, 1, 1, t);
@@ -184,38 +243,8 @@ export class Simulation extends Scene{
       this.max_crater_size = 0.2;
     }
 
-
-
-    // STARS
-    function rand_int(min, max) {return Math.round(100 * (min + Math.random() * max)) / 100;}
-    function rand_pos_neg() {return Math.random() < 0.5 ? -1 : 1;}
-
-    let star_transform = model_transform;
-    let star_count = 500;
-    let star_field_min_radius = 10;     let star_field_max_radius = 40;
-    let star_min_size = 0.05;           let star_max_size = 0.1;
-
-    // call star randomizer once
-    for (let i = 0; i < star_count; i++){
-      star_transform = model_transform;
-      let star_scale = rand_int(star_min_size, star_max_size);
-      let star_trans_x = rand_pos_neg() * rand_int(0, star_field_max_radius);
-      let star_trans_y = rand_pos_neg() * rand_int(0, star_field_max_radius);
-      let star_trans_z = rand_pos_neg() * rand_int(0, star_field_max_radius);
-      // re-roll if point under minimum radius
-      while (Math.sqrt(star_trans_x ** 2 + star_trans_y ** 2 + star_trans_z ** 2) < star_field_min_radius){
-        star_trans_x = rand_pos_neg() * rand_int(star_field_min_radius, star_field_max_radius);
-        star_trans_y = rand_pos_neg() * rand_int(star_field_min_radius, star_field_max_radius);
-        star_trans_z = rand_pos_neg() * rand_int(star_field_min_radius, star_field_max_radius);
-      }
-      star_transform = model_transform.times(Mat4.translation(star_trans_x, star_trans_y, star_trans_z)).times(Mat4.scale(star_scale,star_scale,star_scale));
-      if (this.star_transforms.length < star_count){
-        this.star_transforms.push(star_transform);
-      }
-    }
-
-    // draw stars
-    for (let i = 0; i < star_count; i++){
+    // Draw stars
+    for (let i = 0; i < this.star_transforms.length; i++){
       this.shapes.s5.draw(context, program_state, this.star_transforms[i], this.materials.stars.override({color:this.star_colors[i%6]}));
     }
 
