@@ -41,7 +41,7 @@ class Simulation extends Scene{
     this.total_frames = 0; // Number of total frames rendered by the simulation
     this.next_fps_time = 1; // The next time at which FPS will be calculated
 
-    let assets = "earth-impact-simulator/assets/"; /* Assets path */
+    let assets = "/eis-assets/"; /* Assets path */
 
     this.textures = [new Texture(assets + "meteor.jpg")];
 
